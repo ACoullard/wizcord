@@ -9,7 +9,48 @@ MESSAGES_COLLECTION_NAME = "messages"
 
 """
 
+Collections:
 
+users: {
+    user: {
+        "id",
+        "username"
+        "email"
+        ...
+    }
+    user: {
+        "id",
+        ...
+    }
+}
+
+servers: {
+    server:{
+        "id",
+        "name",
+        "users":{
+            "user_id",
+            "user_id"
+        }
+        "channels": {
+            "channel": {
+                "id",
+                "name"
+            }
+        }
+    }
+}
+
+
+messages:{
+    message:{
+        "id",
+        "content",
+        "author",
+        "timestamp",
+        "channel_id",
+    }
+}
 
 
 """
