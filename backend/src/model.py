@@ -23,14 +23,6 @@ users: {
         "username"
         "email"
         ...
-        "channels":
-            ["channel_id", "access_level", "server_id"],
-            ["channel_id", "access_level", "server_id"],
-            ...
-    }
-    user: {
-        "_id":,
-        ...
     }
 }
 
@@ -39,14 +31,31 @@ servers: {
         "id",
         "name",
         "channels": {
-            "channel": {
-                "id",
-                "name"
-            }
+            "channel_id",
+            "channel_id",
+            ...
         }
     }
 }
-TODO: Maybe add a channels collection? See if this would be more efficient
+
+channel_members: {
+    channel_member: {
+        "user_id",
+        "channel_id",
+        "access_level",
+        "add_date"
+    }
+    ...
+}
+
+channels: {
+    channel: {
+        "id",
+        "name",
+        "creation_date"
+    }
+    ...
+}
 
 
 messages:{
