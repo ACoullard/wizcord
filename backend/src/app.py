@@ -4,7 +4,8 @@ from config import Config
 def create_app(current_config=Config):
     app = Flask(__name__)
     app.config.from_object(current_config)
-
-@create_app(Config).shell_context_processor
-def make_shell_context():
-    return {}
+    
+    from main import main_blueprint
+    main_blueprint.template_folder = current_config.TEMPLATE_FOLDER_MAIN
+    app.register_blueprint(main_blueprint)
+    
