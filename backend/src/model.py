@@ -3,13 +3,18 @@ import atexit
 from datetime import datetime
 from bson.objectid import ObjectId
 
+from typing import Optional
+
 DB_HOSTNAME = "localhost"
 DB_PORT = 27017
 
 DB_NAME = "wizcord"
-MESSAGES_COLLECTION_NAME = "messages"
-SERVERS_COLLECTION_NAME = "servers"
-USERS_COLLECTION_NAME = "users"
+MESSAGES_COLL_NAME = "messages"
+SERVERS_COLL_NAME = "servers"
+USERS_COLL_NAME = "users"
+ROLES_COLL_NAME = "roles"
+SERVER_MEMBERS_COLL_NAME = "server_member"
+CHANNEL_MEMBERS_COLL_NAME = "channel_members"
 
 
 
@@ -26,6 +31,15 @@ users: {
     }
 }
 
+roles: {
+    role: {
+        "name",
+        ...
+    
+    }
+
+}
+
 servers: {
     server:{
         "id",
@@ -35,6 +49,10 @@ servers: {
             "channel_id",
             ...
         }
+        "roles" : [
+            "role_id",
+            "role_id"
+        ]
     }
 }
 
@@ -44,6 +62,18 @@ channel_members: {
         "channel_id",
         "access_level",
         "add_date"
+    }
+    ...
+}
+
+server_members: {
+    server_member: {
+        "user_id",
+        "server_id",
+        "roles": [
+            role_id,
+            role_id
+            ],
     }
     ...
 }
@@ -87,9 +117,12 @@ class Model:
         atexit.register(self.close)
         
         self.db = self.client[DB_NAME]
-        self.messages = self.db[MESSAGES_COLLECTION_NAME]
-        self.servers = self.db[SERVERS_COLLECTION_NAME]
-        self.users = self.db[USERS_COLLECTION_NAME]
+        self.messages = self.db[MESSAGES_COLL_NAME]
+        self.servers = self.db[SERVERS_COLL_NAME]
+        self.users = self.db[USERS_COLL_NAME]
+        self.roles = self.db[ROLES_COLL_NAME]
+        self.server_members = self.db[SERVER_MEMBERS_COLL_NAME]
+        self.channel_members = self.db[CHANNEL_MEMBERS_COLL_NAME]
 
     def save_message(self, author_id: int, channel_id: ObjectId, timestamp: datetime, content: str):
         result = self.messages.insert_one({
@@ -137,36 +170,42 @@ class Model:
             print(f"user {username} not found")
             return None
 
-    def get_viewable_servers(self, user_id: ObjectId):
+    def get_viewable_servers_ids(self, user_id: ObjectId):
         """Gets the servers a certain user has access to"""
-        user = {"users": user_id}
-        """
-        option 1
-        servers list stored in users, channel list stored in users
-        get user obj -> return list
+        server_id_list = self.server_members.distinct("server_id", {"user_id":user_id})
 
-        add new server:
-        go to all users who are a part, add them
-
-        add new channel:
-        add to channel list of all users who have -> add server to them if they don't have it
+        return server_id_list
+    
+    def get_server_by_id(self, server_id: ObjectId):
+        server = self.servers.find_one({"_id":server_id})
+        return server
 
 
-        option 2:
-        channel list stored in users, server stored on channel
-        got to user obj -> got to each channel
-            note down its server
-
-        add new server:
+    def add_user_to_server(self, user_id: ObjectId, server_id: ObjectId, roles: Optional[list[ObjectId]] = None):
+        server = self.servers.find_one({"_id":server_id})
+        if not server:
+            raise ValueError(f"server id {server_id} does not exist") 
+        user = self.users.find_one({"_id":user_id})
+        if not user:
+            raise ValueError(f"user id {user_id} does not exist")
         
-        option 3:
-        channel list stored in users, channel list stored on server
-        go to user obj -> go to each channel
-            search for 
+        if roles is not None:
+            if any([role_id not in server["roles"] for role_id in roles]):
+                raise ValueError("Invalid role assigned")
+        else:
+            roles = []
         
-        """
-        
-        
+
+        responce = self.server_members.insert_one({
+            "user_id": user_id,
+            "serverv_id": server_id,
+            "roles": roles
+        })
+
+        if not responce.acknowledged:
+            raise Exception("write to server members failed")
+
+        return responce.inserted_id
 
     def close(self):
         self.client.close()
