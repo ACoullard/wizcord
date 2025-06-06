@@ -1,6 +1,10 @@
 from pymongo import MongoClient
+
+from pymongo.collection import Collection
+
 import atexit
 from datetime import datetime
+from enum import Enum
 from bson.objectid import ObjectId
 
 from typing import Optional
@@ -11,12 +15,15 @@ DB_PORT = 27017
 DB_NAME = "wizcord"
 MESSAGES_COLL_NAME = "messages"
 SERVERS_COLL_NAME = "servers"
+CHANNELS_COLL_NAME = "channels"
 USERS_COLL_NAME = "users"
 ROLES_COLL_NAME = "roles"
 SERVER_MEMBERS_COLL_NAME = "server_member"
 CHANNEL_MEMBERS_COLL_NAME = "channel_members"
 
-
+class AccessLevel(Enum):
+    VIEW = 0
+    POST = 1
 
 """
 
@@ -44,11 +51,6 @@ servers: {
     server:{
         "id",
         "name",
-        "channels": {
-            "channel_id",
-            "channel_id",
-            ...
-        }
         "roles" : [
             "role_id",
             "role_id"
@@ -80,7 +82,8 @@ server_members: {
 
 channels: {
     channel: {
-        "id",
+        "_id",
+        "server_id",
         "name",
         "creation_date"
     }
@@ -119,11 +122,12 @@ class Model:
         self.db = self.client[DB_NAME]
         self.messages = self.db[MESSAGES_COLL_NAME]
         self.servers = self.db[SERVERS_COLL_NAME]
+        self.channels = self.db[CHANNELS_COLL_NAME]
         self.users = self.db[USERS_COLL_NAME]
         self.roles = self.db[ROLES_COLL_NAME]
         self.server_members = self.db[SERVER_MEMBERS_COLL_NAME]
         self.channel_members = self.db[CHANNEL_MEMBERS_COLL_NAME]
-
+    
     def save_message(self, author_id: int, channel_id: ObjectId, timestamp: datetime, content: str):
         result = self.messages.insert_one({
             "author_id": author_id,
@@ -141,16 +145,23 @@ class Model:
         })
         return result.inserted_id
     
-    def add_channel(self, server_id: ObjectId, channel_name: str):
-        # TODO: Add handling for when server does not exist
-        #
-        result = self.servers.update_one(
-            {"_id": server_id},
-            {"$push": {"channels": channel_name}}
-            )
-        return result.upserted_id
+    def add_channel(self, channel_name: str, server_id: Optional[ObjectId] = None):
+        if server_id is not None:
+            if self.servers.find_one({"_id": server_id}) is None:
+                raise ValueError("given server id does not exist")
+            
+            result = self.channels.insert_one({
+                "server_id": server_id,
+                "name": channel_name
+            })
+        else:
+            result = self.channels.insert_one({
+                "name": channel_name
+            })
+            
+        return result.inserted_id
 
-    def get_messages_in_channel(self, channel_id: int):
+    def get_messages_in_channel(self, channel_id: ObjectId):
         return list(self.messages.find({"channel_id":channel_id}))
     
 
@@ -206,6 +217,25 @@ class Model:
             raise Exception("write to server members failed")
 
         return responce.inserted_id
+    
+    def user_is_server_member(self, user_id: ObjectId, server_id: ObjectId):
+        server_membership = self.server_members.find_one({
+            "user_id":user_id,
+            "server_id":server_id
+            })
+        return server_membership is not None
+    
+    def add_user_to_channel(self, user_id: ObjectId, channel_id: ObjectId, access_level: AccessLevel):
+        channel = self.channels.find_one({"_id":channel_id})
+        if not channel:
+            raise ValueError(f"server id {server_id} does not exist") 
+        user = self.users.find_one({"_id":user_id})
+        if not user:
+            raise ValueError(f"user id {user_id} does not exist")
+        
+
+        if "server_id" in channel and not self.user_is_server_member(user_id, server_id):
+            raise ValueError(f"user is not a member of the server ")
 
     def close(self):
         self.client.close()
