@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 
 import atexit
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from bson.objectid import ObjectId
 
@@ -49,7 +49,7 @@ roles: {
 
 servers: {
     server:{
-        "id",
+        "_id",
         "name",
         "roles" : [
             "role_id",
@@ -95,7 +95,7 @@ messages:{
     message:{
         "id",
         "content",
-        "author",
+        "author_id",
         "timestamp",
         "channel_id",
     }
@@ -117,7 +117,7 @@ class Model:
             password="password",
             serverSelectionTimeoutMS=2000)
         print("opened pyMongo connection")
-        atexit.register(self.close)
+        # atexit.register(self.close)
         
         self.db = self.client[DB_NAME]
         self.messages = self.db[MESSAGES_COLL_NAME]
@@ -128,7 +128,7 @@ class Model:
         self.server_members = self.db[SERVER_MEMBERS_COLL_NAME]
         self.channel_members = self.db[CHANNEL_MEMBERS_COLL_NAME]
     
-    def save_message(self, author_id: int, channel_id: ObjectId, timestamp: datetime, content: str):
+    def add_message(self, author_id: ObjectId, channel_id: ObjectId, timestamp: datetime, content: str):
         result = self.messages.insert_one({
             "author_id": author_id,
             "channel_id": channel_id,
@@ -160,11 +160,7 @@ class Model:
             })
             
         return result.inserted_id
-
-    def get_messages_in_channel(self, channel_id: ObjectId):
-        return list(self.messages.find({"channel_id":channel_id}))
     
-
     def add_user(self, username: str, email: str):
         result = self.users.insert_one({
             "username": username,
@@ -172,7 +168,11 @@ class Model:
         })
         return result.inserted_id
 
-    def get_user_by_username(self, username: str):
+    def get_messages_in_channel(self, channel_id: ObjectId):
+        return list(self.messages.find({"channel_id":channel_id}))
+
+
+    def get_user_id_by_username(self, username: str):
         """Gets a user's id via their username"""
         user = self.users.find_one({"username" : username})
         if user:
@@ -181,7 +181,7 @@ class Model:
             print(f"user {username} not found")
             return None
 
-    def get_viewable_servers_ids(self, user_id: ObjectId):
+    def get_viewable_server_ids(self, user_id: ObjectId):
         """Gets the servers a certain user has access to"""
         server_id_list = self.server_members.distinct("server_id", {"user_id":user_id})
 
@@ -189,8 +189,26 @@ class Model:
     
     def get_server_by_id(self, server_id: ObjectId):
         server = self.servers.find_one({"_id":server_id})
+        if server is None:
+            raise ValueError(f"No server exists by the id {server_id}")
         return server
+    
+    def get_channel_by_id(self, channel_id: ObjectId):
+        channel = self.channels.find_one({"_id": channel_id})
+        if channel is None:
+            raise ValueError(f"No channel exists by the id {channel_id}")
+        return channel
+    
+    def get_user_by_id(self, user_id: ObjectId):
+        user = self.users.find_one({"_id": user_id})
+        if user is None:
+            raise ValueError(f"No user exists by the id {user_id}")
+        return user
+        
 
+    def get_channel_ids_by_server(self, server_id: ObjectId):
+        channels = self.channels.distinct("_id", {"server_id":server_id})
+        return channels
 
     def add_user_to_server(self, user_id: ObjectId, server_id: ObjectId, roles: Optional[list[ObjectId]] = None):
         server = self.servers.find_one({"_id":server_id})
@@ -209,12 +227,9 @@ class Model:
 
         responce = self.server_members.insert_one({
             "user_id": user_id,
-            "serverv_id": server_id,
+            "server_id": server_id,
             "roles": roles
         })
-
-        if not responce.acknowledged:
-            raise Exception("write to server members failed")
 
         return responce.inserted_id
     
@@ -226,16 +241,31 @@ class Model:
         return server_membership is not None
     
     def add_user_to_channel(self, user_id: ObjectId, channel_id: ObjectId, access_level: AccessLevel):
+
+        if access_level not in AccessLevel:
+            raise ValueError("invalid access level")
+        
         channel = self.channels.find_one({"_id":channel_id})
         if not channel:
-            raise ValueError(f"server id {server_id} does not exist") 
+            raise ValueError(f"channel id {channel_id} does not exist") 
         user = self.users.find_one({"_id":user_id})
         if not user:
             raise ValueError(f"user id {user_id} does not exist")
         
 
-        if "server_id" in channel and not self.user_is_server_member(user_id, server_id):
-            raise ValueError(f"user is not a member of the server ")
+        if "server_id" in channel:
+            server_id = channel["server_id"]
+            if not self.user_is_server_member(user_id, server_id):
+                raise ValueError(f"user is not a member of the server")
+        
+        responce = self.channel_members.insert_one({
+            "user_id":user_id,
+            "channel_id":channel_id,
+            "access_level":access_level.value,
+            "add_date":datetime.now(tz=timezone.utc)
+        })
+
+        return responce.inserted_id
 
     def close(self):
         self.client.close()
@@ -252,14 +282,48 @@ class Model:
 #     print(message)
 
 
-if __name__ == "__main__":
-    model = Model()
-    model.connect()
+def setup_test_db(model: Model):
     print(model.client.is_mongos)
 
     server_id = model.add_server("test server")
-    channel_id = model.add_channel(server_id, "test channel 1")
+    channel_id = model.add_channel("test channel 1", server_id)
+    
+    user_1_id = model.add_user("jerma985", "j.erma@bingbong.com")
+    model.add_user_to_server(user_1_id, server_id)
+    model.add_user_to_channel(user_1_id, channel_id, AccessLevel.POST)
 
-    print(model.save_message(1, channel_id, datetime.now(), "test message test message"))
-    print(model.get_messages_in_channel(channel_id))
+
+def drop_database(model: Model):
+    model.client.drop_database(DB_NAME)
+
+if __name__ == "__main__":
+    model = Model()
+    model.connect()
+
+    drop_database(model)
+    setup_test_db(model)
+
+    user_1_id = model.get_user_id_by_username("jerma985")
+    
+    viewable_servers = model.get_viewable_server_ids(user_1_id)
+
+    print("Servers:")
+    for id in viewable_servers:
+        server = model.get_server_by_id(id)
+        print(server["name"])
+        channel_ids = model.get_channel_ids_by_server(id)
+        print("\nchannels:")
+        for c_id in channel_ids:
+            print(model.get_channel_by_id(c_id)["name"])      
+            channel_id = c_id      
+
+
+    message_result = model.add_message(user_1_id, channel_id, datetime.now(), "test message test message")
+    messages = model.get_messages_in_channel(channel_id)
+    print("\nMessages:")
+    for message in messages:
+        author_username = model.get_user_by_id(message["author_id"])["username"]
+        print(f"\"{message["content"]}\" by: {author_username}")
+
+
     model.close()
