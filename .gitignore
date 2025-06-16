@@ -136,6 +136,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Security
+keys/
+
 # Spyder project settings
 .spyderproject
 .spyproject
