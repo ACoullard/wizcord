@@ -2,4 +2,6 @@ flask
 flask-session
 flask-login
 pymongo
+redis
 cryptography
+dotenv

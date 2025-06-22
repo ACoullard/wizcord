@@ -1,56 +1,48 @@
 import os
-from flask import Flask, request, session
+from flask import Flask
 import flask_login
 from flask_session import Session
+from redis import Redis
+from shared_resources import model
 
-from model import Model
-from encrypt_model import EncryptModel
-
-model = Model()
-encrypt = EncryptModel()
-
-app = Flask(__name__)
-app.config["SECRET_KEY"] = os.urandom(16).hex()
-
-
-Session(app)
-login_manager = flask_login.LoginManager() 
-login_manager.init_app(app)
-
-
+from api_bp import api_bp
 
 class User:
-    def __init__(self, user_id, username: str, anonymous = False):
-        self.user_id = user_id
+    def __init__(self, user_id, username: str, anonymous=False):
+        self.id = user_id
+        self.username = username
         self.is_active = True
         self.is_anonymous = anonymous
         self.is_authenticated = False
 
     def get_id(self):
-        return self.user_id
-    
+        return self.id
+
+
+
+app = Flask(__name__)
+app.config["SECRET_KEY"] = os.urandom(16).hex()
+
+
+app.config["SESSION_TYPE"] = "redis"
+app.config["SESSION_REDIS"] = Redis.from_url('redis://127.0.0.1:6379')
+app.config["SESSION_PERMANENT"] = True
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["PERMANENT_SESSION_LIFETIME"] = 60*60*3 # three hours in seconds
+Session(app)
+
+login_manager = flask_login.LoginManager()
+login_manager.init_app(app)
+
+app.register_blueprint(api_bp)
+
 
 @login_manager.user_loader
 def load_user(user_id):
     user = model.get_user_by_id(user_id)
     return User(user_id, user["username"])
 
-@app.route("/api/init_e2ee")
-def init_e2ee():
-    """Initializes the x25519 key exchange that starts the end 2 end encryption (E2EE).
-    Returns the public key and signature while storing the private key in the session.
-    """
-    public_key, private_key, signature = encrypt.init_x25519_exchange()
-    session["x255_private_key"] = private_key
-    
-    return {
-        "x255_public_key":public_key.public_bytes_raw(),
-        "signature":signature
-    }
 
 
-@app.route("/api/login", methods=["POST"])
-def login():
-    # login initializes a session
-    # first publish 
-    req = request.get_json()
+
+

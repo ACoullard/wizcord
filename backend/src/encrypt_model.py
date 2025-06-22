@@ -1,5 +1,5 @@
 import os
-import base64
+import dotenv
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, padding, x25519
@@ -7,11 +7,15 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 # TODO: Add timestamp to x25519 exchange to prevent replay attacks
 
+dotenv.load_dotenv()
+
 class EncryptModel:
     def __init__(self):
         #TODO: fix this
-        self.rsa_private_key = "placeholder" #type: rsa.RSAPrivateKey
+        # self.rsa_private_key = "placeholder" #type: rsa.RSAPrivateKey
+        # self.rsa_private_key = self.import_RSA_private_key("../keys/RSA_private_key.ppk", os.getenv("RSA_PASSPHRASE").encode("utf-8"))
         self.hkdf_salt = os.urandom(16)
+
 
     def import_RSA_private_key(self, path, password):
         if not os.path.exists(path):
@@ -49,18 +53,18 @@ class EncryptModel:
         public_key = private_key.public_key()
 
 
-        public_key_bytes = public_key.public_bytes_raw()
+        # public_key_bytes = public_key.public_bytes_raw()
 
-        signature = self.rsa_private_key.sign(
-            data=public_key_bytes,
-            padding=padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()),
-                salt_length=padding.PSS.MAX_LENGTH
-            ),
-            algorithm=hashes.SHA256()
-        )
+        # signature = self.rsa_private_key.sign(
+        #     data=public_key_bytes,
+        #     padding=padding.PSS(
+        #         mgf=padding.MGF1(hashes.SHA256()),
+        #         salt_length=padding.PSS.MAX_LENGTH
+        #     ),
+        #     algorithm=hashes.SHA256()
+        # )
 
-        return public_key, private_key, signature
+        return public_key, private_key
     
     def complete_x25519_exchange(self, private_key: x25519.X25519PrivateKey, peer_public_key_bytes: bytes):
         peer_public_key = x25519.X25519PublicKey.from_public_bytes(peer_public_key_bytes)
@@ -133,3 +137,17 @@ class EncryptModel:
         return result
 
 
+    def public_key_to_string(self, public_key: x25519.X25519PublicKey):
+        public_key_bytes = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return public_key_bytes.decode("utf-8")
+    
+    def private_key_to_string(self, private_key: x25519.X25519PrivateKey):
+        private_key_bytes = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
+        return private_key_bytes.decode("utf-8")
+    

@@ -304,6 +304,7 @@ if __name__ == "__main__":
     setup_test_db(model)
 
     user_1_id = model.get_user_id_by_username("jerma985")
+    print("current user id:", user_1_id, type(user_1_id))
     
     viewable_servers = model.get_viewable_server_ids(user_1_id)
 
