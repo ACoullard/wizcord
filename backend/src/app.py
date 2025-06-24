@@ -3,21 +3,11 @@ from flask import Flask
 import flask_login
 from flask_session import Session
 from redis import Redis
-from shared_resources import model
+from bson import ObjectId
+
+from shared_resources import model, User
 
 from api_bp import api_bp
-
-class User:
-    def __init__(self, user_id, username: str, anonymous=False):
-        self.id = user_id
-        self.username = username
-        self.is_active = True
-        self.is_anonymous = anonymous
-        self.is_authenticated = False
-
-    def get_id(self):
-        return self.id
-
 
 
 app = Flask(__name__)
@@ -34,15 +24,13 @@ Session(app)
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
-app.register_blueprint(api_bp)
-
-
 @login_manager.user_loader
 def load_user(user_id):
-    user = model.get_user_by_id(user_id)
+    print("entered user loader")
+
+    object_id = ObjectId(user_id)
+
+    user = model.get_user_by_id(object_id)
     return User(user_id, user["username"])
 
-
-
-
-
+app.register_blueprint(api_bp)

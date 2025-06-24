@@ -1,9 +1,13 @@
-from flask import Blueprint, Response, request, session
+from flask import Blueprint, request, session
 from flask_login import login_required, current_user
 from shared_resources import model, encrypt
+from login_bp import login_bp
+
+from utils import make_responce
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
+api_bp.register_blueprint(login_bp)
 
 @api_bp.route("/init-e2ee")
 def init_e2ee():
@@ -32,7 +36,7 @@ def respond_e2ee():
         symmetric_key = encrypt.complete_x25519_exchange(
             session["x255_private_key_bytes"], recieved_public_key)
     except Exception as e:
-        return make_error_responce("Key exchange failed.", 401)
+        return make_responce("Key exchange failed.", 401)
 
     session["symmetric_key"] = symmetric_key
 
@@ -43,5 +47,3 @@ def get_available_servers():
     server_ids = model.get_viewable_server_ids(current_user.id)
 
 
-def make_error_responce(message: str, code: int):
-    return Response({"message": message}, status=code, mimetype="application/json")
