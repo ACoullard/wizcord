@@ -66,21 +66,23 @@ class EncryptModel:
 
         return public_key, private_key
     
-    def complete_x25519_exchange(self, private_key: x25519.X25519PrivateKey, peer_public_key_bytes: bytes):
+    def complete_x25519_exchange(self, private_key_bytes: bytes, peer_public_key_bytes: bytes):
+        private_key = x25519.X25519PrivateKey.from_private_bytes(private_key_bytes)
         peer_public_key = x25519.X25519PublicKey.from_public_bytes(peer_public_key_bytes)
 
         shared_secret = private_key.exchange(peer_public_key)
         
-        symetric_key = HKDF(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=self.hkdf_salt,
-            info=b'symmetric-key',
-        ).derive(shared_secret)
+        symmetric_key = shared_secret
+        # symetric_key = HKDF(
+        #     algorithm=hashes.SHA256(),
+        #     length=64,
+        #     salt=self.hkdf_salt,
+        #     info=b'symmetric-key',
+        # ).derive(shared_secret)
 
         del private_key
 
-        return symetric_key
+        return symmetric_key
     
     def encrypt(self, symmetric_key: bytes, content: bytes) -> bytes:
         """Encrypt using Fernet and a given symmetric key.

@@ -18,7 +18,6 @@ def login():
     if verify_login_username_only(username):
         id = model.get_user_id_by_username(username)
         user = User(str(id), username)
-        print(user.is_active, user.is_anonymous)
         result = login_user(user, remember=True)
         if not result:
             return make_responce("Invalid login", 401)
@@ -31,9 +30,9 @@ def login():
 @login_bp.route("current-user")
 def get_current_user():
     if current_user.is_authenticated:
-        return {"username":None}, 200
-    else:
         return {"username":current_user.username}, 200
+    else:
+        return {"username":None}, 200
 
 def verify_login_username_only(username: str):
     user = model.get_user_id_by_username(username)

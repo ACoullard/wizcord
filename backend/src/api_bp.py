@@ -2,6 +2,7 @@ from flask import Blueprint, request, session
 from flask_login import login_required, current_user
 from shared_resources import model, encrypt
 from login_bp import login_bp
+import base64
 
 from utils import make_responce
 
@@ -18,7 +19,10 @@ def init_e2ee():
     
     session["x255_private_key_bytes"] = private_key.private_bytes_raw()
 
-    public_key_string = encrypt.public_key_to_string(public_key)
+    public_key_b64 = base64.b64encode(public_key.public_bytes_raw())
+
+    # public_key_string = encrypt.public_key_to_string(public_key)
+    public_key_string = public_key_b64.decode("utf-8")
 
     return {
         "x255_public_key": public_key_string,
@@ -32,13 +36,20 @@ def respond_e2ee():
     """
     req = request.get_json()
     recieved_public_key = req["public_key"]
+
+    client_public_bytes = base64.b64decode(recieved_public_key)
     try:
         symmetric_key = encrypt.complete_x25519_exchange(
-            session["x255_private_key_bytes"], recieved_public_key)
+            session["x255_private_key_bytes"], client_public_bytes)
+        
+        session["symmetric_key"] = symmetric_key
+        return make_responce("sucessful key exchange", 200)
+    
     except Exception as e:
+        print(e)
         return make_responce("Key exchange failed.", 401)
 
-    session["symmetric_key"] = symmetric_key
+    
 
 
 @api_bp.route("/servers")
