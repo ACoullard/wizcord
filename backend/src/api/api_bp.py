@@ -58,3 +58,14 @@ def get_available_servers():
     server_ids = model.get_viewable_server_ids(current_user.id)
 
 
+@api_bp.post("/post")
+@login_required
+def post_message():
+    req = request.get_json()
+    
+    model.add_message(
+        author_id=current_user.id,
+        channel_id=req["channelId"],
+        content=req["content"]
+    )    
+

@@ -1,8 +1,5 @@
 from pymongo import MongoClient
 
-from pymongo.collection import Collection
-
-import atexit
 from datetime import datetime, timezone
 from enum import Enum
 from bson.objectid import ObjectId
@@ -128,7 +125,10 @@ class Model:
         self.server_members = self.db[SERVER_MEMBERS_COLL_NAME]
         self.channel_members = self.db[CHANNEL_MEMBERS_COLL_NAME]
     
-    def add_message(self, author_id: ObjectId, channel_id: ObjectId, timestamp: datetime, content: str):
+    def add_message(self, author_id: ObjectId, channel_id: ObjectId, timestamp: Optional[datetime], content: str):
+        if timestamp is None:
+            timestamp = datetime.now(tz=timezone.utc)
+            
         result = self.messages.insert_one({
             "author_id": author_id,
             "channel_id": channel_id,

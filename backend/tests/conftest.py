@@ -1,10 +1,9 @@
 import pytest
-from flask import session
 
 @pytest.fixture()
 def app():
 
-    from app import app as my_app
+    from api.app import app as my_app
     
     my_app.config.update({
         "TESTING": True,
@@ -15,10 +14,6 @@ def app():
     yield my_app
 
     # clean up / reset resources here
-
-@pytest.fixture()
-def session():
-    return session
 
 @pytest.fixture()
 def client(app):

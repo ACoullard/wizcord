@@ -1,6 +1,6 @@
 import atexit
-from model import Model
-from encrypt_model import EncryptModel
+from models.model import Model
+from models.encrypt_model import EncryptModel
 from flask_login import UserMixin
 
 class User(UserMixin):

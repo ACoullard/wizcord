@@ -1,6 +1,4 @@
-from cryptography import fernet
 from cryptography.hazmat.primitives.asymmetric import x25519
-from cryptography.hazmat.primitives import serialization
 import base64
 from flask import session
 
@@ -35,7 +33,7 @@ def test_e2ee(client):
         })
         print(res2)
         server_sym_ley = session["symmetric_key"]
-        
+
     assert sym_key == server_sym_ley
     print(f"client sym key: {sym_key}\nserver sym key: {server_sym_ley}")
 
