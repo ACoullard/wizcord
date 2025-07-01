@@ -1,4 +1,4 @@
-function MessageItem(Message: string, isSameUser: boolean, id: string) {
+function MessageItem(message: string, isSameUser: boolean, id: string) {
     return (
             <>
                 <div className="flex flex-row h-10 justify-end p-1">
