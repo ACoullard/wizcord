@@ -1,3 +1,22 @@
+
+.titlebar-bg {
+  background-color: #211C84;
+}
+.border-color {
+  border-color: #B5A8D5;
+}
+.secondary-bg {
+  background-color: #4D55CC;
+}
+.lists-bg {
+  background-color: #7A73D1
+}
+.message-bg {
+  background-color: #B5A8D5;
+}
+.message-text {
+  color: #B5A8D5;
+}
 body {
   padding: 0;
   margin: 0;
@@ -7,7 +26,18 @@ MessageBox {
   margin: 5px;
   border-radius: 50px;
 }
+@font-face {
+    font-family: "Pixel Warden";
+    src: url("/Pixelwarden-E4Yzj.ttf") format("truetype");
+}
 html *
 {
-  font-family: 'Trebuchet MS', sans-serif !important;
+  font-family: 'Trebuchet', sans-serif
+}
+.font-Pixel {
+  font-family: "Pixel Warden", serif;
+}
+.placeholder-Pixel::placeholder {
+  font-family: "Pixel Warden", serif;
+  font-size: 18px;
 }
