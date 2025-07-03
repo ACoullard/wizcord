@@ -1,16 +1,21 @@
 // import './App.css'
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import ServerList from '@main/components/ServerList';
 import MessageList from '@main/components/MessageList';
 import { BACKEND_URL } from '@/constants';
 
 let firstRun = true;
 
-async function get_servers_data() {
-  const endpoint = new URL("/servers", BACKEND_URL)
+interface ServerData {
+  id: string;
+  name: string;
+
+}
+
+async function get_servers_data(): Promise<ServerData[]>{
+  const endpoint = new URL("api/servers", BACKEND_URL)
   try {
     const responce =  await fetch(endpoint)
-    console.log(responce)
     if (!responce.ok) {
       throw new Error("unable to fetch servers data")
     }
@@ -20,15 +25,18 @@ async function get_servers_data() {
     return json
   } catch (error) {
     console.error(error);
+    return []
   }
 }
 
 function MainScreen() {
-  let serverData = {}
-  useEffect(() => {
+  const [serverData, setServerData] = useState<ServerData[]>([])
+  
+  useEffect(() => { 
     if (firstRun) {
-      get_servers_data().then((res)=>{
-          serverData = res
+      get_servers_data().then(
+        (res)=>{
+          setServerData(res)
         }
       )
       firstRun = false
@@ -52,7 +60,7 @@ function MainScreen() {
           <div className='secondary-bg text-center flex message-text h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
         {/* A generic template for any channel, must include onclick react implementation onto top div */}
           <div className='p-2 h-full border-l-1 border-l-[#211C84] overflow-y-auto'>
-            <ServerList />
+            <ServerList serverList={serverData.map(item => item.name)}/>
           </div>
         </div>
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}

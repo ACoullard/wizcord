@@ -2,7 +2,7 @@ from flask import Blueprint, request
 from flask_login import login_user, current_user
 
 from utils import make_responce
-from shared_resources import model, User
+from .shared_resources import model, User
 
 login_bp = Blueprint("login", __name__, url_prefix="login")
 

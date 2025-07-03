@@ -1,7 +1,9 @@
 flask
 flask-session
 flask-login
+flask-cors
 pymongo
 redis
 cryptography
 dotenv
+pytest

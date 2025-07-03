@@ -3,7 +3,7 @@ import pytest
 @pytest.fixture()
 def app():
 
-    from api.app import app as my_app
+    from app import app as my_app
     
     my_app.config.update({
         "TESTING": True,

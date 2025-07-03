@@ -16,13 +16,19 @@ function ServerItem({ server }: ServerItemProps) {
     );
 }
 
-function ServerList() {
-    let items = [
-        'School Stumped',
-        'Wizards Unite',
-        'Magic Mayhem'
-    ]
+interface ServerListProps {
+    serverList: string[]
+}
+
+function ServerList( { serverList }: ServerListProps) {
+    // const items = [
+    //     'School Stumped',
+    //     'Wizards Unite',
+    //     'Magic Mayhem'
+    // ]
     
+    const items = serverList
+
     return (
         <>
             {items.length === 0 && <p>No items found</p>}

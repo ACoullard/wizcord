@@ -1,7 +1,7 @@
 from flask import Blueprint, request, session
 from flask_login import login_required, current_user
-from shared_resources import model, encrypt
-from login_bp import login_bp
+from .shared_resources import model, encrypt
+from .login_bp import login_bp
 import base64
 
 from utils import make_responce
@@ -50,12 +50,27 @@ def respond_e2ee():
         return make_responce("Key exchange failed.", 401)
 
     
-
-
 @api_bp.route("/servers")
-@login_required
 def get_available_servers():
-    server_ids = model.get_viewable_server_ids(current_user.id)
+    print("test!!!!!!!!!!!!!")
+    return [{"id":1, "name":"test server 1"}, 
+            {"i2d":1, "name":"test server "}, 
+            {"id":1, "name":"test server 3"},
+            {"id":3, "name": "yippeeeeeeeeeee"}]
+
+# @api_bp.route("/servers")
+# @login_required
+# def get_available_servers():
+#     server_ids = model.get_viewable_server_ids(current_user.id)
+#     res = []
+#     for id in server_ids:
+#         server = model.get_server_by_id(id)
+#         res.append({
+#             "id": id,
+#             "name": server["name"],
+#             })
+
+#     return res
 
 
 @api_bp.post("/post")

@@ -2,12 +2,13 @@ import os
 from flask import Flask
 import flask_login
 from flask_session import Session
+from flask_cors import CORS
 from redis import Redis
 from bson import ObjectId
 
-from shared_resources import model, User
+from api.shared_resources import model, User
 
-from api_bp import api_bp
+from api.api_bp import api_bp
 
 
 app = Flask(__name__)
@@ -23,6 +24,10 @@ Session(app)
 
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
+
+CORS(app, origins=[
+    os.environ["FRONTENT_URL"]
+])
 
 @login_manager.user_loader
 def load_user(user_id):
