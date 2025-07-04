@@ -207,8 +207,13 @@ class Model:
         
 
     def get_channel_ids_by_server(self, server_id: ObjectId):
-        channels = self.channels.distinct("_id", {"server_id":server_id})
-        return channels
+        channels = self.channels.find({"server_id":server_id})
+        return [channel["channel_id"] for channel in channels]
+    
+    def get_user_ids_in_server(self, server_id: ObjectId):
+        members = self.server_members.find({"server_id": server_id})
+        return [member["user_id"] for member in members]
+
 
     def add_user_to_server(self, user_id: ObjectId, server_id: ObjectId, roles: Optional[list[ObjectId]] = None):
         server = self.servers.find_one({"_id":server_id})

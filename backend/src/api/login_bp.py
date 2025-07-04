@@ -30,7 +30,7 @@ def login():
 @login_bp.route("current-user")
 def get_current_user():
     if current_user.is_authenticated:
-        return {"username":current_user.username}, 200
+        return {"username":current_user.username, "id":current_user.id}, 200
     else:
         return {"username":None}, 200
 

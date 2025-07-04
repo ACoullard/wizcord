@@ -24,4 +24,11 @@ def client(app):
 def runner(app):
     return app.test_cli_runner()
 
+@pytest.fixture()
+def logged_in_client(client):
+    client.post("/api/login", json={
+        "username":"jerma985",
+        "password":"test"
+    })
+    return client
 

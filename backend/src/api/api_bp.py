@@ -1,14 +1,17 @@
+import base64
+from bson import ObjectId
 from flask import Blueprint, request, session
 from flask_login import login_required, current_user
-from .shared_resources import model, encrypt
+from .shared_resources import model, encrypt, User
 from .login_bp import login_bp
-import base64
 
 from utils import make_responce
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 api_bp.register_blueprint(login_bp)
+
+current_user: User
 
 @api_bp.route("/init-e2ee")
 def init_e2ee():
@@ -50,27 +53,27 @@ def respond_e2ee():
         return make_responce("Key exchange failed.", 401)
 
     
-@api_bp.route("/servers")
-def get_available_servers():
-    print("test!!!!!!!!!!!!!")
-    return [{"id":1, "name":"test server 1"}, 
-            {"i2d":1, "name":"test server "}, 
-            {"id":1, "name":"test server 3"},
-            {"id":3, "name": "yippeeeeeeeeeee"}]
-
 # @api_bp.route("/servers")
-# @login_required
 # def get_available_servers():
-#     server_ids = model.get_viewable_server_ids(current_user.id)
-#     res = []
-#     for id in server_ids:
-#         server = model.get_server_by_id(id)
-#         res.append({
-#             "id": id,
-#             "name": server["name"],
-#             })
+#     print("test!!!!!!!!!!!!!")
+#     return [{"id":1, "name":"test server 1"}, 
+#             {"i2d":1, "name":"test server "}, 
+#             {"id":1, "name":"test server 3"},
+#             {"id":3, "name": "yippeeeeeeeeeee"}]
 
-#     return res
+@api_bp.route("/servers")
+@login_required
+def get_available_servers():
+    server_ids = current_user.viewable_servers
+    res = []
+    for id in server_ids:
+        server = model.get_server_by_id(id)
+        res.append({
+            "id": str(id),
+            "name": server["name"],
+            })
+
+    return res
 
 
 @api_bp.post("/post")
@@ -84,3 +87,24 @@ def post_message():
         content=req["content"]
     )    
 
+
+@api_bp.get("/server-data/<server_id>")
+@login_required
+def get_server_data(server_id):
+    server_id = ObjectId(server_id)
+    if server_id not in current_user.viewable_servers:
+        return make_responce("Not authorized to view server data", 401)
+    
+    server_data = model.get_server_by_id(server_id)
+    channels = model.get_channel_ids_by_server(server_id)
+    users = model.get_user_ids_in_server(server_id)
+    
+    channels = [str(channel) for channel in channels]
+    users = [str(user) for user in users]
+
+    return {
+        "name": server_data["name"],
+        "roles": server_data.get("roles"),
+        "channels": channels,
+        "users": users
+    }
