@@ -1,21 +1,23 @@
 // import './App.css'
 import { useEffect, useState } from 'react';
-import ServerList from '@main/components/ServerList';
+import ChannelList from '@main/components/ServerList';
 import MessageList from '@main/components/MessageList';
+import { useServerDataCache } from '@main/hooks/useServerDataCache';
+import type { ServerData, ChannelData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
 
 let firstRun = true;
 
-interface ServerData {
+interface ServerNameTag {
   id: string;
   name: string;
 
 }
 
-async function get_servers_data(): Promise<ServerData[]>{
+async function getServerList(): Promise<ServerNameTag[]>{
   const endpoint = new URL("api/servers", BACKEND_URL)
   try {
-    const responce =  await fetch(endpoint)
+    const responce =  await fetch(endpoint, {credentials: 'include'})
     if (!responce.ok) {
       throw new Error("unable to fetch servers data")
     }
@@ -29,21 +31,71 @@ async function get_servers_data(): Promise<ServerData[]>{
   }
 }
 
+
+async function login() {
+  const endpoint = new URL("api/login", BACKEND_URL)
+  const responce = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      username:"jerma985",
+      password:"test"
+    })
+  })
+  console.log(responce)
+  return responce.ok
+}
+
+async function getCurrentUser() {
+  const endpoint = new URL("api/login/current-user", BACKEND_URL)
+  const responce = await fetch(endpoint, {
+    credentials: 'include'
+  })
+  if (!responce.ok) {
+      throw new Error("unable to fetch current user")
+    }
+  const json = await responce.json()
+  return json
+}
+
 function MainScreen() {
-  const [serverData, setServerData] = useState<ServerData[]>([])
+  const [serverList, setServerList] = useState<ServerNameTag[]>([])
+  const [currentServer, setCurrentServer] = useState<ServerNameTag>()
+  const [channelsList, setChannelsList] = useState<string[]>([])
+  const get_server_data = useServerDataCache()
   
   useEffect(() => { 
     if (firstRun) {
-      get_servers_data().then(
+      login()
+      .then(() => getCurrentUser())
+      .then(() => getServerList())
+      .then(
         (res)=>{
-          setServerData(res)
-        }
-      )
+          setServerList(res)
+            if (res.length > 0) {
+              setCurrentServer(res[0])
+            }
+          }
+        )
       firstRun = false
     }
   }, [])
+
+
+  useEffect(() => {
+    if (currentServer == undefined) {
+      return
+    }
+    get_server_data(currentServer.id)
+      .then((server_data) => {
+      const channel_list = server_data.channels.map(item => item["name"])
+      setChannelsList(channel_list)
+      })
+  }, [currentServer])
   
-  console.log(serverData)
   return (
     <div className='flex flex-col min-h-screen'>
       {/* Top Title bar */}
@@ -60,7 +112,7 @@ function MainScreen() {
           <div className='secondary-bg text-center flex message-text h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
         {/* A generic template for any channel, must include onclick react implementation onto top div */}
           <div className='p-2 h-full border-l-1 border-l-[#211C84] overflow-y-auto'>
-            <ServerList serverList={serverData.map(item => item.name)}/>
+            <ChannelList serverList={channelsList}/>
           </div>
         </div>
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}

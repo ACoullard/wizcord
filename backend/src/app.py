@@ -18,7 +18,7 @@ app.config["SECRET_KEY"] = os.urandom(16).hex()
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_REDIS"] = Redis.from_url('redis://127.0.0.1:6379')
 app.config["SESSION_PERMANENT"] = True
-app.config["SESSION_COOKIE_SECURE"] = True
+# app.config["SESSION_COOKIE_SECURE"] = True # TODO: put this back to true in production
 app.config["PERMANENT_SESSION_LIFETIME"] = 60*60*3 # three hours in seconds
 Session(app)
 
@@ -27,10 +27,12 @@ login_manager.init_app(app)
 
 CORS(app, origins=[
     os.environ["FRONTENT_URL"]
-])
+],
+supports_credentials=True)
 
 @login_manager.user_loader
 def load_user(user_id):
+    print("user id", user_id)
     object_id = ObjectId(user_id)
 
     user = model.get_user_by_id(object_id)

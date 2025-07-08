@@ -207,8 +207,12 @@ class Model:
         
 
     def get_channel_ids_by_server(self, server_id: ObjectId):
-        channels = self.channels.find({"server_id":server_id})
+        channels = self.channels.find({"server_id":server_id},)
         return [channel["channel_id"] for channel in channels]
+    
+    def get_channel_data_by_server(self, server_id: ObjectId):
+        channel_datas = self.channels.find({"server_id": server_id})
+        return channel_datas
     
     def get_user_ids_in_server(self, server_id: ObjectId):
         members = self.server_members.find({"server_id": server_id})

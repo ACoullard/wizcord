@@ -3,7 +3,7 @@ interface ServerItemProps {
     server: string;
 }
 
-function ServerItem({ server }: ServerItemProps) {
+function ChannelItem({ server }: ServerItemProps) {
     return (
         <>
             <div className="flex flex-row h-1/30 px-2 items-center justify-center">
@@ -16,11 +16,11 @@ function ServerItem({ server }: ServerItemProps) {
     );
 }
 
-interface ServerListProps {
+interface ChannelListProps {
     serverList: string[]
 }
 
-function ServerList( { serverList }: ServerListProps) {
+function ChannelList( { serverList }: ChannelListProps) {
     // const items = [
     //     'School Stumped',
     //     'Wizards Unite',
@@ -33,11 +33,11 @@ function ServerList( { serverList }: ServerListProps) {
         <>
             {items.length === 0 && <p>No items found</p>}
             {items.map((item, index) => (
-                <ServerItem server={item} key={index}/>
+                <ChannelItem server={item} key={index}/>
             ))}
             
         </>
     );
 }
 
-export default ServerList;
+export default ChannelList;

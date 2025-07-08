@@ -1,6 +1,6 @@
 import base64
 from bson import ObjectId
-from flask import Blueprint, request, session
+from flask import Blueprint, request, session, jsonify
 from flask_login import login_required, current_user
 from .shared_resources import model, encrypt, User
 from .login_bp import login_bp
@@ -96,15 +96,18 @@ def get_server_data(server_id):
         return make_responce("Not authorized to view server data", 401)
     
     server_data = model.get_server_by_id(server_id)
-    channels = model.get_channel_ids_by_server(server_id)
+    channels = list(model.get_channel_data_by_server(server_id))
     users = model.get_user_ids_in_server(server_id)
+
+    for channel in channels:
+        channel["_id"] = str(channel["_id"])
+        channel["server_id"] = str(channel["server_id"])
     
-    channels = [str(channel) for channel in channels]
     users = [str(user) for user in users]
 
-    return {
+    return jsonify({
         "name": server_data["name"],
         "roles": server_data.get("roles"),
         "channels": channels,
         "users": users
-    }
+    })
