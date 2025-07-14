@@ -1,9 +1,10 @@
 // import './App.css'
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import ChannelList from '@main/components/ServerList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
-import type { ServerData, ChannelData } from '@main/types';
+import { useSSEListener } from './hooks/useSSEListener';
+import type { MessageData, ServerData, ChannelData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
 
 let firstRun = true;
@@ -61,16 +62,30 @@ async function getCurrentUser() {
   return json
 }
 
+async function postMessage(message: string) {
+  console.log(message)
+}
+
 function MainScreen() {
+  const inputRef = useRef<HTMLInputElement>(null)
   const [serverList, setServerList] = useState<ServerNameTag[]>([])
   const [currentServer, setCurrentServer] = useState<ServerNameTag>()
   const [channelsList, setChannelsList] = useState<string[]>([])
   const get_server_data = useServerDataCache()
+
+  const [messagesList, setMessagesList] = useState<MessageData[]>([])
+
+  function incomingMessageHandler(event: MessageEvent) {
+    console.log(event.data)
+    // setMessagesList([...messagesList, event.data])
+  }
+  
+  useSSEListener("message", incomingMessageHandler)
   
   useEffect(() => { 
     if (firstRun) {
       login()
-      .then(() => getCurrentUser())
+      .then(() => getCurrentUser()) // just here for debugging purposes
       .then(() => getServerList())
       .then(
         (res)=>{
@@ -95,6 +110,12 @@ function MainScreen() {
       setChannelsList(channel_list)
       })
   }, [currentServer])
+
+  function handleMessageSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter" && inputRef.current != null) {
+      postMessage(inputRef.current.value)
+    }
+  }
   
   return (
     <div className='flex flex-col min-h-screen'>
@@ -122,8 +143,18 @@ function MainScreen() {
             <MessageList />
           </div>
           <div className='lists-bg text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
-            <input className ="shadow- appearance-none h-full rounded-full w-14/15 py-2 px-3 
-            message-text leading-tight focus:outline-none focus:shadow-outline placeholder-white placeholder-Pixel" id="input" type="text" placeholder="Cast your spells here!"/>
+            <input 
+              ref={inputRef}
+              className ="shadow- appearance-none h-full rounded-full w-14/15 py-2 px-3 
+              message-text leading-tight focus:outline-none focus:shadow-outline placeholder-white placeholder-Pixel" 
+              id="input"
+              type="text"
+              placeholder="Cast your spells here!"
+              autoCorrect='off'
+              autoComplete='off'
+              data-lpignore="true"
+              onKeyUp={handleMessageSubmit}
+            />
             <button className='ml-2'>
               <img className='w-12 h-10 rounded-full object-contain scale-100' src="/Send-Image.jpg" alt=""/>
             </button>

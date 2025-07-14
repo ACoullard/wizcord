@@ -2,14 +2,18 @@ import base64
 from bson import ObjectId
 from flask import Blueprint, request, session, jsonify
 from flask_login import login_required, current_user
+from flask_sse import sse
 from .shared_resources import model, encrypt, User
 from .login_bp import login_bp
+from .channels_bp import channel_bp
 
 from utils import make_responce
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 api_bp.register_blueprint(login_bp)
+api_bp.register_blueprint(sse, url_prefix="/stream")
+
 
 current_user: User
 
@@ -75,17 +79,6 @@ def get_available_servers():
 
     return res
 
-
-@api_bp.post("/post")
-@login_required
-def post_message():
-    req = request.get_json()
-    
-    model.add_message(
-        author_id=current_user.id,
-        channel_id=req["channelId"],
-        content=req["content"]
-    )    
 
 
 @api_bp.get("/server-data/<server_id>")

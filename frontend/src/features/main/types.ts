@@ -10,3 +10,9 @@ export interface ServerData {
   channels: ChannelData[];
   users: string[];
 }
+
+export interface MessageData {
+  id: string;
+  content: string;
+  user: string;
+}
