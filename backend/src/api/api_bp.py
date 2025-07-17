@@ -13,6 +13,7 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 api_bp.register_blueprint(login_bp)
 api_bp.register_blueprint(sse, url_prefix="/stream")
+api_bp.register_blueprint(channel_bp)
 
 
 current_user: User
@@ -93,7 +94,7 @@ def get_server_data(server_id):
     users = model.get_user_ids_in_server(server_id)
 
     for channel in channels:
-        channel["_id"] = str(channel["_id"])
+        channel["id"] = str(channel.pop("_id"))
         channel["server_id"] = str(channel["server_id"])
     
     users = [str(user) for user in users]

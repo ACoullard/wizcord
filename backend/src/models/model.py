@@ -125,7 +125,7 @@ class Model:
         self.server_members = self.db[SERVER_MEMBERS_COLL_NAME]
         self.channel_members = self.db[CHANNEL_MEMBERS_COLL_NAME]
     
-    def add_message(self, author_id: ObjectId, channel_id: ObjectId, timestamp: Optional[datetime], content: str):
+    def add_message(self, author_id: ObjectId, channel_id: ObjectId, content: str, timestamp: Optional[datetime] = None) -> ObjectId:
         if timestamp is None:
             timestamp = datetime.now(tz=timezone.utc)
             

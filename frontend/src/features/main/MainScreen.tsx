@@ -62,21 +62,33 @@ async function getCurrentUser() {
   return json
 }
 
-async function postMessage(message: string) {
+async function postMessage(message: string, channel_id: string) {
   console.log(message)
+  const endpoint = new URL(`api/channel/${channel_id}/post`, BACKEND_URL)
+  const responce = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      content: message
+    })
+  })
+  return responce.ok
 }
 
 function MainScreen() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [serverList, setServerList] = useState<ServerNameTag[]>([])
   const [currentServer, setCurrentServer] = useState<ServerNameTag>()
-  const [channelsList, setChannelsList] = useState<string[]>([])
+  const [channelsList, setChannelsList] = useState<ChannelData[]>([])
   const get_server_data = useServerDataCache()
 
   const [messagesList, setMessagesList] = useState<MessageData[]>([])
 
   function incomingMessageHandler(event: MessageEvent) {
-    console.log(event.data)
+    console.log("incoming message:", event.data)
     // setMessagesList([...messagesList, event.data])
   }
   
@@ -106,14 +118,13 @@ function MainScreen() {
     }
     get_server_data(currentServer.id)
       .then((server_data) => {
-      const channel_list = server_data.channels.map(item => item["name"])
-      setChannelsList(channel_list)
+      setChannelsList(server_data.channels)
       })
   }, [currentServer])
 
   function handleMessageSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter" && inputRef.current != null) {
-      postMessage(inputRef.current.value)
+      postMessage(inputRef.current.value, channelsList[0].id)
     }
   }
   
@@ -133,7 +144,7 @@ function MainScreen() {
           <div className='secondary-bg text-center flex message-text h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
         {/* A generic template for any channel, must include onclick react implementation onto top div */}
           <div className='p-2 h-full border-l-1 border-l-[#211C84] overflow-y-auto'>
-            <ChannelList serverList={channelsList}/>
+            <ChannelList channelNames={channelsList.map(item => item["name"])}/>
           </div>
         </div>
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}

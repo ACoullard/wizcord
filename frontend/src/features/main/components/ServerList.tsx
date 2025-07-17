@@ -17,17 +17,17 @@ function ChannelItem({ server }: ServerItemProps) {
 }
 
 interface ChannelListProps {
-    serverList: string[]
+    channelNames: string[]
 }
 
-function ChannelList( { serverList }: ChannelListProps) {
+function ChannelList( { channelNames: channelNames }: ChannelListProps) {
     // const items = [
     //     'School Stumped',
     //     'Wizards Unite',
     //     'Magic Mayhem'
     // ]
     
-    const items = serverList
+    const items = channelNames
 
     return (
         <>

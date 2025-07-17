@@ -1,6 +1,8 @@
 from flask import Blueprint, request, session, jsonify
 from flask_login import login_required, current_user
 from flask_sse import sse
+from bson import ObjectId
+
 from .shared_resources import model, User
 
 current_user: User
@@ -16,13 +18,14 @@ def get_messages(channel_id):
 
 @channel_bp.post("/<channel_id>/post")
 @login_required
-def post_message():
+def post_message(channel_id):
     req = request.get_json()
 
     sse.publish({"message": req["content"]})
 
-    model.add_message(
+    result_id = model.add_message(
         author_id=current_user.id,
-        channel_id=req["channelId"],
-        content=req["content"]
+        channel_id=ObjectId(channel_id),
+        content=req["content"],
     )
+    return {"message": "message recieved", "id": str(result_id)}, 200
