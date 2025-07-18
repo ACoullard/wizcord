@@ -21,7 +21,6 @@ app.config["SESSION_PERMANENT"] = True
 # app.config["SESSION_COOKIE_SECURE"] = True # TODO: put this back to true in production
 app.config["PERMANENT_SESSION_LIFETIME"] = 60*60*3 # three hours in seconds
 
-app.config["REDIS_URL"] = 'redis://127.0.0.1:6379'
 Session(app)
 
 login_manager = flask_login.LoginManager()

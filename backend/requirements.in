@@ -1,8 +1,7 @@
 flask
 flask-session
 flask-login
-flask-cors
-flask_sse 
+flask-cors 
 pymongo
 redis
 cryptography

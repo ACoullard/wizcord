@@ -3,8 +3,10 @@ from pymongo import MongoClient
 from datetime import datetime, timezone
 from enum import Enum
 from bson.objectid import ObjectId
+from dataclasses import dataclass
 
 from typing import Optional
+import json
 
 DB_HOSTNAME = "localhost"
 DB_PORT = 27017
@@ -21,6 +23,25 @@ CHANNEL_MEMBERS_COLL_NAME = "channel_members"
 class AccessLevel(Enum):
     VIEW = 0
     POST = 1
+
+
+
+@dataclass
+class Message:
+    id: ObjectId
+    content: str
+    author_id: ObjectId
+    timestamp: datetime
+    channel_id: ObjectId
+
+    def str_dict_format(self):
+        return json.dumps({
+        "id" : str(self.id),
+        "content" : self.content,
+        "author_id" : str(self.author_id),
+        "timestamp" : str(self.timestamp),
+        "channel_id" : str(self.channel_id),
+        })
 
 """
 
@@ -275,6 +296,10 @@ class Model:
         })
 
         return responce.inserted_id
+    
+    def channel_exists(self, channel_id: ObjectId):
+        channel = self.channels.find_one({"_id": channel_id})
+        return channel is not None
 
     def close(self):
         self.client.close()
