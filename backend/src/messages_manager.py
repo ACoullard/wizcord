@@ -29,6 +29,6 @@ class ChannelMessagesObserver:
         for subscriber in self.subscribers:
             subscriber.update(message)
 
-    def publish(self, id, author_id, content, timestamp, channel_id):
+    def publish(self, id, author_id, channel_id, content, timestamp, ):
         message = Message(id, content, author_id, timestamp, channel_id)
         self.publish_message(message)

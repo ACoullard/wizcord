@@ -18,19 +18,19 @@ observers_dict: Dict[str, ChannelMessagesObserver] = {}
 
 
 
-@channel_bp.route('/<channel_id>')
+@channel_bp.route("/<channel_id>")
 def get_messages(channel_id):
     pass
 
 
-@channel_bp.route('/<channel_id>/message-stream')
-def message_stream(channel_id):
-    print(model.get_channel_ids_by_server(ObjectId()))
+@channel_bp.route("/message-stream")
+def message_stream():
+    print("reached here")
+    channel_id = request.args.get("channel", type=str)
     if channel_id not in observers_dict:
         if model.channel_exists(ObjectId(channel_id)):
             observers_dict[channel_id] = ChannelMessagesObserver()
         else:
-            print("went in here")
             return "Invalid channel id", 400
     
     observer = observers_dict[channel_id]
@@ -40,9 +40,9 @@ def message_stream(channel_id):
     def event_stream():
         while True:
             result = listener.retrieve_update().str_dict_format()
-            yield result
+            yield f"data: {result}\n\n"
     
-    return Response(event_stream(), mimetype='text/event-stream')
+    return Response(event_stream(), mimetype="text/event-stream")
 
 
 
@@ -66,9 +66,10 @@ def post_message(channel_id):
     
     observers_dict[channel_id].publish(
         result_id,
-        req["content"],
         current_user.id,
-        timestamp,
-        ObjectId(channel_id))
+        ObjectId(channel_id),
+        req["content"],
+        timestamp
+    )
 
     return {"message": "message recieved", "id": str(result_id)}, 200

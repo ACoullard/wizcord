@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import ChannelList from '@main/components/ServerList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
-import { useSSEListener } from './hooks/useSSEListener';
+import { useMessageSSEListener } from '@main/hooks/useSSEListener';
 import type { MessageData, ServerData, ChannelData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
 
@@ -63,7 +63,7 @@ async function getCurrentUser() {
 }
 
 async function postMessage(message: string, channel_id: string) {
-  console.log(message)
+  // console.log(message)
   const endpoint = new URL(`api/channel/${channel_id}/post`, BACKEND_URL)
   const responce = await fetch(endpoint, {
     method: 'POST',
@@ -80,19 +80,16 @@ async function postMessage(message: string, channel_id: string) {
 
 function MainScreen() {
   const inputRef = useRef<HTMLInputElement>(null)
+
   const [serverList, setServerList] = useState<ServerNameTag[]>([])
   const [currentServer, setCurrentServer] = useState<ServerNameTag>()
-  const [channelsList, setChannelsList] = useState<ChannelData[]>([])
   const get_server_data = useServerDataCache()
+
+  const [channelsList, setChannelsList] = useState<ChannelData[]>([])
+  const [currentChannel, setCurrentChannel] = useState<ChannelData>()
 
   const [messagesList, setMessagesList] = useState<MessageData[]>([])
 
-  function incomingMessageHandler(event: MessageEvent) {
-    console.log("incoming message:", event.data)
-    // setMessagesList([...messagesList, event.data])
-  }
-  
-  useSSEListener("message", incomingMessageHandler)
   
   useEffect(() => { 
     if (firstRun) {
@@ -102,32 +99,48 @@ function MainScreen() {
       .then(
         (res)=>{
           setServerList(res)
-            if (res.length > 0) {
-              setCurrentServer(res[0])
-            }
+          if (res.length > 0) {
+            setCurrentServer(res[0])
           }
-        )
+        }
+      )
       firstRun = false
     }
   }, [])
-
-
+  
+  
   useEffect(() => {
     if (currentServer == undefined) {
       return
     }
     get_server_data(currentServer.id)
-      .then((server_data) => {
+    .then((server_data) => {
       setChannelsList(server_data.channels)
-      })
+      setCurrentChannel(server_data.channels[0])
+    })
   }, [currentServer])
-
+  
   function handleMessageSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter" && inputRef.current != null) {
-      postMessage(inputRef.current.value, channelsList[0].id)
-    }
+  if (event.key === "Enter" && inputRef.current != null && currentChannel) {
+    postMessage(inputRef.current.value, currentChannel.id)
+    .then((succeeded) => {
+      if (succeeded && inputRef.current != null) {
+        inputRef.current.value = ""
+      } else {
+        console.error("message failed to send")
+      }
+    })
+  }
+  };
+  
+  function incomingMessageHandler(data: MessageData) {
+    console.log("incoming message:", data.content)
+    setMessagesList([...messagesList, data])
   }
   
+  useMessageSSEListener(currentChannel?.id, incomingMessageHandler)
+  
+
   return (
     <div className='flex flex-col min-h-screen'>
       {/* Top Title bar */}
@@ -151,7 +164,8 @@ function MainScreen() {
         <div className='message-bg w-29/42 flex flex-col p-2'>
         {/* The Actual Messages listed through React function */}
           <div className='h-17/18 flex flex-col overflow-y-auto'>
-            <MessageList />
+            {messagesList.map(data => <a>{data.content}</a>)}
+            {/* <MessageList /> */}
           </div>
           <div className='lists-bg text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
             <input 

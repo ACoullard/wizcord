@@ -27,7 +27,7 @@ login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 
 CORS(app, origins=[
-    os.environ["FRONTENT_URL"]
+    os.environ["FRONTEND_URL"]
 ],
 supports_credentials=True)
 
