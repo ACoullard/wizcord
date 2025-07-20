@@ -15,4 +15,5 @@ export interface MessageData {
   id: string;
   content: string;
   user: string;
+  timestamp: Date;
 }

@@ -1,34 +1,51 @@
+import type { MessageData } from '@main/types';
+
 interface MessageItemProps {
-    message: string;
+    username: string;
+    content: string;
     isSameUser: boolean;
 }
 
-function MessageItem({message, isSameUser}: MessageItemProps) {
+function MessageItem({content, username, isSameUser}: MessageItemProps) {
     return (
             <>
                 <div className="flex flex-row h-10 justify-end p-1">
-                    {!isSameUser && <div className="w-1/15 h-5 center text-left"><p>UserName</p></div>}
-                    <div className="w-14/15 h-5 p-l-3"><p>{message}</p></div>
+                    {!isSameUser && <div className="w-1/15 h-5 center text-left"><p>{username}</p></div>}
+                    <div className="w-14/15 h-5 p-l-3"><p>{content}</p></div>
                 </div>
                 {/* TODO: Check if this is the first message, if no, put a little border thing, same as is done with servers. */}
             </>
     )
 }
 
-function MessageList() {
-    let messages = [
-        { content: "Hello, world!", isSameUser: false, id: 1 },
-        { content: "How are you?", isSameUser: true, id: 2 },
-        { content: "I'm fine, thanks!", isSameUser: false, id: 3 }
-    ];
+interface MessageListProps {
+    messages: MessageData[]
+}
+function MessageList({messages}: MessageListProps) {
+    console.log()
+    
+    messages.sort(function(x, y){
+        return x.timestamp.getTime() -  y.timestamp.getTime();
+    })
 
-    return (
-
-        messages.map(msg => (
-            <MessageItem message={msg.content} isSameUser={msg.isSameUser} key={msg.id}/>
-        ))
-
-    );
+    const messageItemData = []
+    for (let i = 0; i < messages.length; i++) {
+        console.log(messages[i].user)
+        let isSameUser
+        if (i > 0 && messages[i].user == messages[i-1].user) {
+            isSameUser = true
+        } else {
+            isSameUser = false
+        }
+        messageItemData.push(<MessageItem 
+            content={messages[i].content}
+            username={messages[i].user}
+            isSameUser={isSameUser} 
+            key={i}
+            />
+        )
+    }
+    return messageItemData;
 }
 
 export default MessageList;

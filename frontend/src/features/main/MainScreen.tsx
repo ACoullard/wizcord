@@ -140,6 +140,7 @@ function MainScreen() {
   
   useMessageSSEListener(currentChannel?.id, incomingMessageHandler)
   
+  console.log(messagesList, messagesList[0])
 
   return (
     <div className='flex flex-col min-h-screen'>
@@ -164,8 +165,8 @@ function MainScreen() {
         <div className='message-bg w-29/42 flex flex-col p-2'>
         {/* The Actual Messages listed through React function */}
           <div className='h-17/18 flex flex-col overflow-y-auto'>
-            {messagesList.map(data => <a>{data.content}</a>)}
-            {/* <MessageList /> */}
+            {/* {messagesList.map(data => <a>{data.content}</a>)} */}
+            <MessageList messages={messagesList}/>
           </div>
           <div className='lists-bg text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
             <input 

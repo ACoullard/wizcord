@@ -20,12 +20,18 @@ export function useMessageSSEListener(channelId: string | undefined, onEvent: ev
         const eventSource = new EventSource(endpoint, {
             withCredentials: true,
             });
-        console.log("gh 3")
         eventSourceRef.current = eventSource;
 
         eventSource.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            const rawMessageData = JSON.parse(event.data);
+            const message: MessageData = {
+                id: rawMessageData.id,
+                content: rawMessageData.content,
+                timestamp: new Date(rawMessageData.timestamp),
+                user: rawMessageData.author_id
+            } 
             console.log(message)
+
             onEvent(message);
         };
 
