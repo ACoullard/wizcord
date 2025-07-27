@@ -55,14 +55,6 @@ def respond_e2ee():
         print(e)
         return make_responce("Key exchange failed.", 401)
 
-    
-# @api_bp.route("/servers")
-# def get_available_servers():
-#     print("test!!!!!!!!!!!!!")
-#     return [{"id":1, "name":"test server 1"}, 
-#             {"i2d":1, "name":"test server "}, 
-#             {"id":1, "name":"test server 3"},
-#             {"id":3, "name": "yippeeeeeeeeeee"}]
 
 @api_bp.route("/servers")
 @login_required
@@ -88,15 +80,13 @@ def get_server_data(server_id):
         return make_responce("Not authorized to view server data", 401)
     
     server_data = model.get_server_by_id(server_id)
-    channels = list(model.get_channel_data_by_server(server_id))
-    users = model.get_user_ids_in_server(server_id)
+    channels = list(model.get_channels_data_by_server(server_id))
+    users = list(model.get_server_users_public_data(server_id, stringify_ids=True))
 
     for channel in channels:
         channel["id"] = str(channel.pop("_id"))
         channel["server_id"] = str(channel["server_id"])
     
-    users = [str(user) for user in users]
-
     return jsonify({
         "name": server_data["name"],
         "roles": server_data.get("roles"),

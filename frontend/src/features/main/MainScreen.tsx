@@ -4,7 +4,7 @@ import ChannelList from '@main/components/ServerList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
 import { useMessageSSEListener } from '@main/hooks/useSSEListener';
-import type { MessageData, ServerData, ChannelData } from '@main/types';
+import type { MessageData, ServerData, ChannelData, UserData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
 
 let firstRun = true;
@@ -88,6 +88,8 @@ function MainScreen() {
   const [channelsList, setChannelsList] = useState<ChannelData[]>([])
   const [currentChannel, setCurrentChannel] = useState<ChannelData>()
 
+  const [userList, setUserList] = useState<UserData[]>([])
+
   const [messagesList, setMessagesList] = useState<MessageData[]>([])
 
   
@@ -117,6 +119,8 @@ function MainScreen() {
     .then((server_data) => {
       setChannelsList(server_data.channels)
       setCurrentChannel(server_data.channels[0])
+
+      setUserList(server_data.users)
     })
   }, [currentServer])
   
@@ -166,7 +170,9 @@ function MainScreen() {
         {/* The Actual Messages listed through React function */}
           <div className='h-17/18 flex flex-col overflow-y-auto'>
             {/* {messagesList.map(data => <a>{data.content}</a>)} */}
-            <MessageList messages={messagesList}/>
+            <MessageList 
+              messages={messagesList}
+              users={userList}/>
           </div>
           <div className='lists-bg text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
             <input 
@@ -187,7 +193,9 @@ function MainScreen() {
           </div>
         </div>
         {/* Users List */}
-        <div className='lists-bg w-1/6 flex p-2'>User List
+        <div className='lists-bg w-1/6 flex flex-col p-2'>
+          <b>User List</b>
+          {userList.map(user => user.username)}
         </div>
       </div>
     </div>

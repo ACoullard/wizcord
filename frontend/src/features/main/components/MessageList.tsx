@@ -1,4 +1,4 @@
-import type { MessageData } from '@main/types';
+import type { MessageData, UserData } from '@main/types';
 
 interface MessageItemProps {
     username: string;
@@ -20,10 +20,17 @@ function MessageItem({content, username, isSameUser}: MessageItemProps) {
 
 interface MessageListProps {
     messages: MessageData[]
+    users: UserData[]
 }
-function MessageList({messages}: MessageListProps) {
+
+function MessageList({messages, users}: MessageListProps) {
     console.log()
-    
+
+    const userMap = users.reduce<Record<string, UserData>>((acc, user) => {
+        acc[user.user_id] = user;
+        return acc
+    }, {})
+
     messages.sort(function(x, y){
         return x.timestamp.getTime() -  y.timestamp.getTime();
     })
@@ -39,7 +46,7 @@ function MessageList({messages}: MessageListProps) {
         }
         messageItemData.push(<MessageItem 
             content={messages[i].content}
-            username={messages[i].user}
+            username={userMap[messages[i].user].username}
             isSameUser={isSameUser} 
             key={i}
             />

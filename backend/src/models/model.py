@@ -1,11 +1,11 @@
 from pymongo import MongoClient
+from pymongo.cursor import Cursor
 
 from datetime import datetime, timezone
 from enum import Enum
 from bson.objectid import ObjectId
 from dataclasses import dataclass
 
-from typing import Optional
 import json
 
 DB_HOSTNAME = "localhost"
@@ -146,7 +146,7 @@ class Model:
         self.server_members = self.db[SERVER_MEMBERS_COLL_NAME]
         self.channel_members = self.db[CHANNEL_MEMBERS_COLL_NAME]
     
-    def add_message(self, author_id: ObjectId, channel_id: ObjectId, content: str, timestamp: Optional[datetime] = None) -> ObjectId:
+    def add_message(self, author_id: ObjectId, channel_id: ObjectId, content: str, timestamp: None | datetime = None) -> ObjectId:
         if timestamp is None:
             timestamp = datetime.now(tz=timezone.utc)
             
@@ -166,7 +166,7 @@ class Model:
         })
         return result.inserted_id
     
-    def add_channel(self, channel_name: str, server_id: Optional[ObjectId] = None):
+    def add_channel(self, channel_name: str, server_id: None | ObjectId = None):
         if server_id is not None:
             if self.servers.find_one({"_id": server_id}) is None:
                 raise ValueError("given server id does not exist")
@@ -231,16 +231,85 @@ class Model:
         channels = self.channels.find({"server_id":server_id},)
         return [channel["channel_id"] for channel in channels]
     
-    def get_channel_data_by_server(self, server_id: ObjectId):
+    def get_channels_data_by_server(self, server_id: ObjectId):
         channel_datas = self.channels.find({"server_id": server_id})
         return channel_datas
     
     def get_user_ids_in_server(self, server_id: ObjectId):
-        members = self.server_members.find({"server_id": server_id})
-        return [member["user_id"] for member in members]
+        members = self.server_members.find(
+            {"server_id": server_id},
+            {"_id": 1})
+        return members
+    
+    def get_user_ids_by_server(self, server_id: ObjectId) -> Cursor: 
+        user_datas = self.server_members.find({"server_id": server_id})
+        return user_datas
+    
+    def get_server_users_public_data(self, server_id: ObjectId, stringify_ids = False):
+        get_user_ids = {
+            "$match": {"server_id": server_id},
+        }
+        public_user_data_pipeline = [
+            {"$project": {
+                "username": 1,
+                "_id":0
+            }}
+        ]
+        lookup_user_data = {
+            "$lookup": {
+                "from":"users",
+                "localField": "user_id",
+                "foreignField": "_id",
+                "pipeline": public_user_data_pipeline,
+                "as": "user_data"
+            }
+        }
+        unwind_user_data = {
+            "$unwind": "$user_data"
+        }
+        # isolate_user = {
+        #     "$replaceRoot": {
+        #         "newRoot": "$user_data"
+        #     }
+        # }
+        merge_user_data = {
+            "$replaceRoot": {
+                "newRoot": {
+                    "$mergeObjects": ["$$ROOT", "$user_data"]
+                }
+            }
+        }
+        clean_up_result = {
+            "$project": {
+                "user_data": 0,
+                "_id": 0,
+            }
+        }
 
+        stringify = {
+            "$addFields": {
+                "server_id": {"$toString": "$server_id"},
+                "user_id": {"$toString": "$user_id"},
+            }
+        }
 
-    def add_user_to_server(self, user_id: ObjectId, server_id: ObjectId, roles: Optional[list[ObjectId]] = None):
+        pipeline = [
+            get_user_ids,
+            lookup_user_data,
+            unwind_user_data,
+            # isolate_user,
+            merge_user_data,
+            clean_up_result
+        ]
+
+        if stringify_ids:
+            pipeline.append(stringify)
+
+        user_data = self.server_members.aggregate(pipeline)
+        return user_data
+        
+
+    def add_user_to_server(self, user_id: ObjectId, server_id: ObjectId, roles: None | list[ObjectId] = None):
         server = self.servers.find_one({"_id":server_id})
         if not server:
             raise ValueError(f"server id {server_id} does not exist") 
@@ -337,28 +406,36 @@ if __name__ == "__main__":
     drop_database(model)
     setup_test_db(model)
 
+
+
     user_1_id = model.get_user_id_by_username("jerma985")
     print("current user id:", user_1_id, type(user_1_id))
     
     viewable_servers = model.get_viewable_server_ids(user_1_id)
 
-    print("Servers:")
-    for id in viewable_servers:
-        server = model.get_server_by_id(id)
-        print(server["name"])
-        channel_ids = model.get_channel_ids_by_server(id)
-        print("\nchannels:")
-        for c_id in channel_ids:
-            print(model.get_channel_by_id(c_id)["name"])      
-            channel_id = c_id      
+
+    server_id = viewable_servers[0]
+
+    users = model.get_server_users_public_data(server_id, stringify_ids=True)
+
+    print(list(users))
+    # print("Servers:")
+    # for id in viewable_servers:
+    #     server = model.get_server_by_id(id)
+    #     print(server["name"])
+    #     channel_ids = model.get_channel_ids_by_server(id)
+    #     print("\nchannels:")
+    #     for c_id in channel_ids:
+    #         print(model.get_channel_by_id(c_id)["name"])      
+    #         channel_id = c_id      
 
 
-    message_result = model.add_message(user_1_id, channel_id, datetime.now(), "test message test message")
-    messages = model.get_messages_in_channel(channel_id)
-    print("\nMessages:")
-    for message in messages:
-        author_username = model.get_user_by_id(message["author_id"])["username"]
-        print(f"\"{message["content"]}\" by: {author_username}")
+    # message_result = model.add_message(user_1_id, channel_id, datetime.now(), "test message test message")
+    # messages = model.get_messages_in_channel(channel_id)
+    # print("\nMessages:")
+    # for message in messages:
+    #     author_username = model.get_user_by_id(message["author_id"])["username"]
+    #     print(f"\"{message["content"]}\" by: {author_username}")
 
 
     model.close()
