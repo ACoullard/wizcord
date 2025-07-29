@@ -33,22 +33,6 @@ async function getServerList(): Promise<ServerNameTag[]>{
 }
 
 
-async function login() {
-  const endpoint = new URL("api/login", BACKEND_URL)
-  const responce = await fetch(endpoint, {
-    method: 'POST',
-    credentials: 'include', 
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      username:"jerma985",
-      password:"test"
-    })
-  })
-  console.log(responce)
-  return responce.ok
-}
 
 async function getCurrentUser() {
   const endpoint = new URL("api/login/current-user", BACKEND_URL)
@@ -149,24 +133,24 @@ function MainScreen() {
   return (
     <div className='flex flex-col min-h-screen'>
       {/* Top Title bar */}
-      <div className='titlebar-bg flex h-8 items-center justify-center text-white text-2xl p-2'> <p className='font-Pixel'>Wizcord</p> </div>
+      <div className='bg-titlebar flex h-8 items-center justify-center text-white text-2xl p-2'> <p className='font-pixel'>Wizcord</p> </div>
       <div className='flex-1 flex'>
         {/* Div containing the server icons which refresh channels etc. */}
-        <div className='secondary-bg w-16 flex flex-row items-start z-10'>
+        <div className='bg-secondary w-16 flex flex-row items-start z-10'>
           <button className='ml-1'>
             <img className='w-13 h-12 rounded-full object-contain scale-100 mt-2' src="/Send-Image.jpg" alt=""/>
           </button>
         </div>
         {/* Channel List Div */}
-        <div className='lists-bg w-1/7 flex flex-col p-b-0'>
-          <div className='secondary-bg text-center flex message-text h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
+        <div className='bg-lists w-1/7 flex flex-col p-b-0'>
+          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
         {/* A generic template for any channel, must include onclick react implementation onto top div */}
           <div className='p-2 h-full border-l-1 border-l-[#211C84] overflow-y-auto'>
             <ChannelList channelNames={channelsList.map(item => item["name"])}/>
           </div>
         </div>
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}
-        <div className='message-bg w-29/42 flex flex-col p-2'>
+        <div className='bg-border w-29/42 flex flex-col p-2'>
         {/* The Actual Messages listed through React function */}
           <div className='h-17/18 flex flex-col overflow-y-auto'>
             {/* {messagesList.map(data => <a>{data.content}</a>)} */}
