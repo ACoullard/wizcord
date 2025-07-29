@@ -32,22 +32,6 @@ async function getServerList(): Promise<ServerNameTag[]>{
 }
 
 
-async function login() {
-  const endpoint = new URL("api/login", BACKEND_URL)
-  const responce = await fetch(endpoint, {
-    method: 'POST',
-    credentials: 'include', 
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      username:"jerma985",
-      password:"test"
-    })
-  })
-  console.log(responce)
-  return responce.ok
-}
 
 async function getCurrentUser() {
   const endpoint = new URL("api/login/current-user", BACKEND_URL)
@@ -84,6 +68,22 @@ function MainScreen() {
     }
   }, [])
 
+async function login(){
+  const endpoint = new URL("api/login", BACKEND_URL)
+  const responce = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      username: 'jerma985',
+      password: 'test'
+    })
+  })
+  console.log(responce)
+  return responce.ok
+}
 
   useEffect(() => {
     if (currentServer == undefined) {
@@ -123,7 +123,7 @@ function MainScreen() {
           </div>
           <div className='bg-lists text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
             <input className ="shadow- appearance-none h-full rounded-full w-14/15 py-2 px-3 
-            text-border leading-tight focus:outline-none focus:shadow-outline placeholder-white placeholder-pixel" id="input" type="text" placeholder="Cast your spells here!"/>
+             leading-tight focus:outline-none focus:shadow-outline placeholder-white placeholder-pixel text-white" id="input" type="text" placeholder="Cast your spells here!"/>
             <button className='ml-2'>
               <img className='w-12 h-10 rounded-full object-contain scale-100' src="/Send-Image.jpg" alt=""/>
             </button>
