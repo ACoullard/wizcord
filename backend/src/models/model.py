@@ -395,6 +395,10 @@ def setup_test_db(model: Model):
     model.add_user_to_server(user_1_id, server_id)
     model.add_user_to_channel(user_1_id, channel_id, AccessLevel.POST)
 
+    user_2_id = model.add_user("theFreak", "admin@goon.cave")
+    model.add_user_to_server(user_2_id, server_id)
+    model.add_user_to_channel(user_2_id, channel_id, AccessLevel.VIEW)
+
 
 def drop_database(model: Model):
     model.client.drop_database(DB_NAME)

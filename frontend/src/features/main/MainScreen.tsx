@@ -1,4 +1,3 @@
-// import './App.css'
 import { useEffect, useState, useRef } from 'react';
 import ChannelList from '@main/components/ServerList';
 import MessageList from '@main/components/MessageList';
@@ -75,12 +74,12 @@ function MainScreen() {
   const [userList, setUserList] = useState<UserData[]>([])
 
   const [messagesList, setMessagesList] = useState<MessageData[]>([])
+  const messageScrollContainer = useRef<HTMLDivElement>(null)
 
   
   useEffect(() => { 
     if (firstRun) {
-      login()
-      .then(() => getCurrentUser()) // just here for debugging purposes
+      getCurrentUser() // just here for debugging purposes
       .then(() => getServerList())
       .then(
         (res)=>{
@@ -107,6 +106,13 @@ function MainScreen() {
       setUserList(server_data.users)
     })
   }, [currentServer])
+
+  useEffect(() => {
+    if (messageScrollContainer.current) {
+        messageScrollContainer.current.scrollTop = messageScrollContainer.current.scrollHeight;
+    }
+  }, [messagesList])
+
   
   function handleMessageSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
   if (event.key === "Enter" && inputRef.current != null && currentChannel) {
@@ -131,7 +137,7 @@ function MainScreen() {
   console.log(messagesList, messagesList[0])
 
   return (
-    <div className='flex flex-col min-h-screen'>
+    <div className='flex flex-col h-screen'>
       {/* Top Title bar */}
       <div className='bg-titlebar flex h-8 items-center justify-center text-white text-2xl p-2'> <p className='font-pixel'>Wizcord</p> </div>
       <div className='flex-1 flex'>
@@ -152,13 +158,14 @@ function MainScreen() {
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}
         <div className='bg-border w-29/42 flex flex-col p-2'>
         {/* The Actual Messages listed through React function */}
-          <div className='h-17/18 flex flex-col overflow-y-auto'>
-            {/* {messagesList.map(data => <a>{data.content}</a>)} */}
-            <MessageList 
-              messages={messagesList}
-              users={userList}/>
+          <div className='flex-grow relative'>
+            <div ref={messageScrollContainer} className='overflow-y-auto h-full w-full absolute'>
+              <MessageList 
+                messages={messagesList}
+                users={userList}/>
+            </div>
           </div>
-          <div className='lists-bg text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
+          <div className='bg-lists text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
             <input 
               ref={inputRef}
               className ="shadow- appearance-none h-full rounded-full w-14/15 py-2 px-3 
@@ -177,9 +184,9 @@ function MainScreen() {
           </div>
         </div>
         {/* Users List */}
-        <div className='lists-bg w-1/6 flex flex-col p-2'>
+        <div className='bg-lists w-1/6 flex flex-col p-2'>
           <b>User List</b>
-          {userList.map(user => user.username)}
+          {userList.map(user => <p>{user.username}</p>)}
         </div>
       </div>
     </div>
