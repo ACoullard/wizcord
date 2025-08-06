@@ -9,11 +9,8 @@ type eventListner = (data: MessageData) => any
 
 export function useMessageSSEListener(channelId: string | undefined, onEvent: eventListner) {
     const eventSourceRef = useRef<EventSource>(null);
-    console.log("got here 1", channelId)
-
     useEffect( () => {
         if (channelId == undefined) {
-            console.log("got here 2")
             return
         }
         endpoint.searchParams.set('channel', channelId)

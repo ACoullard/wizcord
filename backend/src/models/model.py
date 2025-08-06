@@ -245,10 +245,43 @@ class Model:
         user_datas = self.server_members.find({"server_id": server_id})
         return user_datas
     
+    def get_paginated_messages(self, channel_id: ObjectId, page_num: int = 1, page_size: int = 10):
+
+        get_count = [{ "$count": "totalCount" }]
+
+        print("Page size", page_size, type(page_size))
+        print("page num:", page_num, type(page_num))
+        get_paginated = [
+            { "$skip": page_num * page_size },
+            { "$limit": page_size }
+        ]
+
+        pipeline = [
+            {
+                "$match": {"channel_id": channel_id}
+            },
+            {
+                "$sort": {"timestamp": -1}
+            },
+            {
+                "$project": {"channel_id": 0}
+            },
+            {
+                "$facet": {
+                    "metadata": get_count,
+                    "data": get_paginated,
+                },
+            }]
+        
+        result = self.messages.aggregate(pipeline)
+        return result
+
+    
     def get_server_users_public_data(self, server_id: ObjectId, stringify_ids = False):
         get_user_ids = {
             "$match": {"server_id": server_id},
         }
+
         public_user_data_pipeline = [
             {"$project": {
                 "username": 1,
@@ -264,6 +297,7 @@ class Model:
                 "as": "user_data"
             }
         }
+
         unwind_user_data = {
             "$unwind": "$user_data"
         }

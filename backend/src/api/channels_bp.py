@@ -20,8 +20,18 @@ observers_dict: Dict[str, ChannelMessagesObserver] = {}
 
 @channel_bp.route("/<channel_id>")
 def get_messages(channel_id):
-    pass
+    page_num = request.args.get("page", default=0, type=int)
+    page_limit = request.args.get("limit", default=10, type=int)
 
+    result = list(model.get_paginated_messages(ObjectId(channel_id), page_num, page_limit))[0]
+    
+
+    for message in result["data"]:
+        message["id"] = str(message.pop("_id"))
+        message["author_id"] = str(message["author_id"])
+
+    print(result)
+    return result
 
 @channel_bp.route("/message-stream")
 def message_stream():

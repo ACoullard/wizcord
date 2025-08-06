@@ -24,7 +24,6 @@ interface MessageListProps {
 }
 
 function MessageList({messages, users}: MessageListProps) {
-    console.log()
 
     const userMap = users.reduce<Record<string, UserData>>((acc, user) => {
         acc[user.user_id] = user;
@@ -37,7 +36,6 @@ function MessageList({messages, users}: MessageListProps) {
 
     const messageItemData = []
     for (let i = 0; i < messages.length; i++) {
-        console.log(messages[i].user)
         let isSameUser
         if (i > 0 && messages[i].user == messages[i-1].user) {
             isSameUser = true

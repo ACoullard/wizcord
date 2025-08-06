@@ -32,7 +32,6 @@ async function getServerList(): Promise<ServerNameTag[]>{
 }
 
 
-
 async function getCurrentUser() {
   const endpoint = new URL("api/login/current-user", BACKEND_URL)
   const responce = await fetch(endpoint, {
@@ -43,6 +42,27 @@ async function getCurrentUser() {
     }
   const json = await responce.json()
   return json
+}
+
+async function getMessages(channelId: string): Promise<MessageData[]> {
+  const endpoint = new URL(`api/channel/${channelId}`, BACKEND_URL)
+  endpoint.searchParams.set("limit", "100")
+  const responce = await fetch(endpoint, {
+    credentials: 'include'
+  })
+  if (!responce.ok) {
+      throw new Error("unable to fetch message data")
+    }
+  const json = await responce.json()
+  const messagesList: MessageData[] = json["data"].map((message:any) => ({
+    id: message.id,
+    content: message.content,
+    timestamp: new Date(message.timestamp),
+    user: message.author_id
+  }))
+  console.log("messageList: ")
+  console.log(messagesList)
+  return messagesList
 }
 
 async function postMessage(message: string, channel_id: string) {
@@ -107,6 +127,16 @@ function MainScreen() {
     })
   }, [currentServer])
 
+
+  useEffect(() => {
+    if (currentChannel == undefined) {
+      return
+    }
+    getMessages(currentChannel.id).then((data) => {
+      setMessagesList([...messagesList, ...data])
+    })
+  }, [currentChannel])
+
   useEffect(() => {
     if (messageScrollContainer.current) {
         messageScrollContainer.current.scrollTop = messageScrollContainer.current.scrollHeight;
@@ -134,8 +164,6 @@ function MainScreen() {
   
   useMessageSSEListener(currentChannel?.id, incomingMessageHandler)
   
-  console.log(messagesList, messagesList[0])
-
   return (
     <div className='flex flex-col h-screen'>
       {/* Top Title bar */}
