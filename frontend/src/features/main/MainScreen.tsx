@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import ChannelList from '@main/components/ServerList';
+import ChannelList from '@/features/main/components/ChannelList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
 import { useMessageSSEListener } from '@main/hooks/useSSEListener';
@@ -133,7 +133,7 @@ function MainScreen() {
       return
     }
     getMessages(currentChannel.id).then((data) => {
-      setMessagesList([...messagesList, ...data])
+      setMessagesList([...data])
     })
   }, [currentChannel])
 
@@ -180,7 +180,10 @@ function MainScreen() {
           <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
         {/* A generic template for any channel, must include onclick react implementation onto top div */}
           <div className='p-2 h-full border-l-1 border-l-[#211C84] overflow-y-auto'>
-            <ChannelList channelNames={channelsList.map(item => item["name"])}/>
+            <ChannelList onChannelClick={(name) => {
+              const channeldata = channelsList.find(channel => channel.name == name)
+              setCurrentChannel(channeldata)}}
+            channelNames={channelsList.map(item => item["name"])}/>
           </div>
         </div>
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}

@@ -1,14 +1,16 @@
 
-interface ServerItemProps {
-    server: string;
+interface ChannelItemProps {
+    channel: string;
+    onClick:  (name: string) => void;
 }
 
-function ChannelItem({ server }: ServerItemProps) {
+function ChannelItem({ channel, onClick }: ChannelItemProps) {
     return (
         <>
-            <div className="flex flex-row h-1/30 px-2 items-center justify-center">
+            <div className="flex flex-row h-1/30 px-2 items-center justify-center"
+            onClick={() => {onClick(channel)}}>
                 <div className='w-4 h-full flex items-center justify-center mr-1'><p>#</p></div>
-                <div className='w-full h-full flex items-center'>{server}</div>
+                <div className='w-full h-full flex items-center'>{channel}</div>
             </div>
             <hr className="w-14/15 h-0.5 my-1 message-bg border-0 flex rounded-3xl mb-1.5 mx-auto"/>
             {/* TODO: Check if this is the first message, if no, put a little border thing, same as is done with servers. */}
@@ -17,10 +19,11 @@ function ChannelItem({ server }: ServerItemProps) {
 }
 
 interface ChannelListProps {
-    channelNames: string[]
+    onChannelClick: (name: string) => void;
+    channelNames: string[];
 }
 
-function ChannelList( { channelNames: channelNames }: ChannelListProps) {
+function ChannelList( { onChannelClick, channelNames }: ChannelListProps) {
     // const items = [
     //     'School Stumped',
     //     'Wizards Unite',
@@ -33,7 +36,7 @@ function ChannelList( { channelNames: channelNames }: ChannelListProps) {
         <>
             {items.length === 0 && <p>No items found</p>}
             {items.map((item, index) => (
-                <ChannelItem server={item} key={index}/>
+                <ChannelItem onClick={onChannelClick} channel={item} key={index}/>
             ))}
             
         </>

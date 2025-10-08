@@ -424,10 +424,13 @@ def setup_test_db(model: Model):
 
     server_id = model.add_server("test server")
     channel_id = model.add_channel("test channel 1", server_id)
+    channel_id2 = model.add_channel("test channel 2", server_id)
+
     
     user_1_id = model.add_user("jerma985", "j.erma@bingbong.com")
     model.add_user_to_server(user_1_id, server_id)
     model.add_user_to_channel(user_1_id, channel_id, AccessLevel.POST)
+    model.add_user_to_channel(user_1_id, channel_id2, AccessLevel.POST)
 
     user_2_id = model.add_user("theFreak", "admin@goon.cave")
     model.add_user_to_server(user_2_id, server_id)
