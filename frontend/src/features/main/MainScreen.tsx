@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import ChannelList from '@/features/main/components/ChannelList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
@@ -108,7 +108,10 @@ function MainScreen() {
             setCurrentServer(res[0])
           }
         }
-      )
+      ).catch((error) => {
+        console.error(error)
+        alert("Failed to fetch server list.")
+      })
       firstRun = false
     }
   }, [])
@@ -124,25 +127,28 @@ function MainScreen() {
       setCurrentChannel(server_data.channels[0])
 
       setUserList(server_data.users)
+    }).catch((error) => {
+      console.error(error)
     })
-  }, [currentServer])
-
-
+  }, [currentServer, get_server_data])
+  
+  
   useEffect(() => {
     if (currentChannel == undefined) {
       return
     }
+    console.log("ran this")
     getMessages(currentChannel.id).then((data) => {
       setMessagesList([...data])
     })
   }, [currentChannel])
-
-  useEffect(() => {
+  
+  useLayoutEffect(() => {
     if (messageScrollContainer.current) {
         messageScrollContainer.current.scrollTop = messageScrollContainer.current.scrollHeight;
     }
   }, [messagesList])
-
+  
   
   function handleMessageSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
   if (event.key === "Enter" && inputRef.current != null && currentChannel) {
@@ -159,7 +165,7 @@ function MainScreen() {
   
   function incomingMessageHandler(data: MessageData) {
     console.log("incoming message:", data.content)
-    setMessagesList([...messagesList, data])
+    setMessagesList(prevMessages => [...prevMessages, data])
   }
   
   useMessageSSEListener(currentChannel?.id, incomingMessageHandler)
@@ -176,10 +182,10 @@ function MainScreen() {
           </button>
         </div>
         {/* Channel List Div */}
-        <div className='bg-lists w-1/7 flex flex-col p-b-0'>
-          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-1 border-b-[#211C84]'><p>Channel List</p></div>
-        {/* A generic template for any channel, must include onclick react implementation onto top div */}
-          <div className='p-2 h-full border-l-1 border-l-[#211C84] overflow-y-auto'>
+        <div className='bg-lists border-l-3 border-l-[#5a61cc] w-1/7 flex flex-col p-b-0'>
+          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>Channel List</p></div>
+          {/* A generic template for any channel, must include onclick react implementation onto top div */}
+          <div className='p-2 bg-secondary h-full overflow-y-auto'>
             <ChannelList onChannelClick={(name) => {
               const channeldata = channelsList.find(channel => channel.name == name)
               setCurrentChannel(channeldata)}}
@@ -215,9 +221,11 @@ function MainScreen() {
           </div>
         </div>
         {/* Users List */}
-        <div className='bg-lists w-1/6 flex flex-col p-2'>
-          <b>User List</b>
-          {userList.map(user => <p>{user.username}</p>)}
+        <div className='bg-secondary w-1/6 flex flex-col'>
+          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>User List</p></div>
+          <div className='p-4'>
+            {userList.map(user => <p>{user.username}</p>)}
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { ServerData } from '@main/types';
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 
 import { BACKEND_URL } from '@/constants';
 
@@ -29,18 +29,22 @@ type ServerCacheEntry = {
 };
 
 export function useServerDataCache() {
+  console.log("useServerDataCache called");
   const serverDataCache = useRef<Record<string, ServerCacheEntry>>({})
-  
-  function get_data(serverId: string): Promise<ServerData> {
+
+  const get_data_promise = useCallback((serverId: string): Promise<ServerData> => {
     const cached = serverDataCache.current[serverId];
+    // if already have data, return it as a promise
     if (cached?.data) {
       return Promise.resolve(cached.data);
     }
     
+    // if a fetch is already in progress, return the existing promise
     if (cached?.promise) {
       return cached.promise;
     }
 
+    // otherwise, start a new fetch
     const promise = get_server_data(serverId).then((res) => {
       console.log("Server data fetched:", res);
       serverDataCache.current[serverId] = { data: res };
@@ -53,8 +57,8 @@ export function useServerDataCache() {
     serverDataCache.current[serverId] = { promise };
     
     return promise;
-  }
+  }, [])
 
 
-  return get_data 
+  return get_data_promise;
 }
