@@ -3,46 +3,9 @@ import ChannelList from '@/features/main/components/ChannelList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
 import { useMessageSSEListener } from '@main/hooks/useSSEListener';
-import type { MessageData, ServerData, ChannelData, UserData } from '@main/types';
+import { useServerList } from '@main/hooks/useServerList';
+import type { MessageData, ServerData, ChannelData, ServerMemberData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
-
-let firstRun = true;
-
-interface ServerNameTag {
-  id: string;
-  name: string;
-
-}
-
-async function getServerList(): Promise<ServerNameTag[]>{
-  const endpoint = new URL("api/servers", BACKEND_URL)
-  try {
-    const responce =  await fetch(endpoint, {credentials: 'include'})
-    if (!responce.ok) {
-      throw new Error("unable to fetch servers data")
-    }
-
-    const json = await responce.json()
-    console.log(json)
-    return json
-  } catch (error) {
-    console.error(error);
-    return []
-  }
-}
-
-
-async function getCurrentUser() {
-  const endpoint = new URL("api/login/current-user", BACKEND_URL)
-  const responce = await fetch(endpoint, {
-    credentials: 'include'
-  })
-  if (!responce.ok) {
-      throw new Error("unable to fetch current user")
-    }
-  const json = await responce.json()
-  return json
-}
 
 async function getMessages(channelId: string): Promise<MessageData[]> {
   const endpoint = new URL(`api/channel/${channelId}`, BACKEND_URL)
@@ -83,39 +46,16 @@ async function postMessage(message: string, channel_id: string) {
 
 function MainScreen() {
   const inputRef = useRef<HTMLInputElement>(null)
-
-  const [serverList, setServerList] = useState<ServerNameTag[]>([])
-  const [currentServer, setCurrentServer] = useState<ServerNameTag>()
+  const { serverList, currentServer, setCurrentServer } = useServerList()
   const get_server_data = useServerDataCache()
 
   const [channelsList, setChannelsList] = useState<ChannelData[]>([])
   const [currentChannel, setCurrentChannel] = useState<ChannelData>()
 
-  const [userList, setUserList] = useState<UserData[]>([])
+  const [userList, setUserList] = useState<ServerMemberData[]>([])
 
   const [messagesList, setMessagesList] = useState<MessageData[]>([])
   const messageScrollContainer = useRef<HTMLDivElement>(null)
-
-  
-  useEffect(() => { 
-    if (firstRun) {
-      getCurrentUser() // just here for debugging purposes
-      .then(() => getServerList())
-      .then(
-        (res)=>{
-          setServerList(res)
-          if (res.length > 0) {
-            setCurrentServer(res[0])
-          }
-        }
-      ).catch((error) => {
-        console.error(error)
-        alert("Failed to fetch server list.")
-      })
-      firstRun = false
-    }
-  }, [])
-  
   
   useEffect(() => {
     if (currentServer == undefined) {

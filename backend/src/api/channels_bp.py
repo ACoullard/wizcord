@@ -30,7 +30,7 @@ def get_messages(channel_id):
         message["id"] = str(message.pop("_id"))
         message["author_id"] = str(message["author_id"])
 
-    print(result)
+    # print(result)
     return result
 
 @channel_bp.route("/message-stream")

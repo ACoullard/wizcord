@@ -36,7 +36,11 @@ def load_user(user_id):
     print("user id", user_id)
     object_id = ObjectId(user_id)
 
-    user = model.get_user_by_id(object_id)
-    return User(user_id, user["username"])
+    try:
+        user = model.get_user_by_id(object_id)
+        return User(user_id, user["username"])
+    except Exception as e:
+        print("Error loading user:", e)
+        return None
 
 app.register_blueprint(api_bp)

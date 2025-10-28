@@ -4,6 +4,7 @@ import MainScreen from "./features/main/MainScreen";
 import LoginPage from "./features/user-management/LoginPage";
 import { createBrowserRouter, Router, RouterProvider } from 'react-router-dom';
 import LandingPage from './features/user-management/LandingPage';
+import { AuthStatusContextProvider } from './contexts/AuthStatusContextProvider';
 
 const router = createBrowserRouter([
   {
@@ -26,7 +27,9 @@ const router = createBrowserRouter([
 function App() {
   return (
     <>
-      <RouterProvider router={router}/>
+      <AuthStatusContextProvider>
+        <RouterProvider router={router}/>
+      </AuthStatusContextProvider>
     </>
   )
 }

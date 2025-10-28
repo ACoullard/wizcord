@@ -1,8 +1,25 @@
 import { useNavigate } from 'react-router-dom';
+import { BACKEND_URL } from '@/constants';
+import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
+
+async function loginAnon(): Promise<boolean> {
+  const endpoint = new URL("api/login/anonymous", BACKEND_URL)
+  const responce = await fetch(endpoint, {
+    method: 'POST',
+    credentials: 'include', 
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  console.log(responce)
+  return responce.ok
+}
+
 
 
 function LandingPage() {
   const navigate = useNavigate();
+  const { setStateLoggedinAnonymous } = useAuthStatusContext();
 
   return (
   <div className="h-screen bg-lists flex flex-col justify-center items-center">
@@ -11,7 +28,17 @@ function LandingPage() {
         Enter Wizcord!
       </p>
       <button
-        className="w-4/5 h-14 bg-border text-white text-xl rounded-full font-pixel hover:bg-lists transition duration-300 ease-in-out">
+        className="w-4/5 h-14 bg-border text-white text-xl rounded-full font-pixel hover:bg-lists transition duration-300 ease-in-out"
+        onClick={async () => {
+          const success = await loginAnon();
+          if (success) {
+            setStateLoggedinAnonymous();
+            navigate("/wizcord");
+          } else {
+            console.error("Login failed");
+          }
+        }}
+      >
         Anonymous Login
       </button>
     </div>

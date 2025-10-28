@@ -1,6 +1,6 @@
 import base64
 from bson import ObjectId
-from flask import Blueprint, request, session, jsonify
+from flask import Blueprint, request, session, jsonify, current_app
 from flask_login import login_required, current_user
 from .shared_resources import model, encrypt, User
 from .login_bp import login_bp
@@ -57,9 +57,12 @@ def respond_e2ee():
 
 
 @api_bp.route("/servers")
-@login_required
+# @login_required
 def get_available_servers():
-    server_ids = current_user.viewable_servers
+    if not (current_user.is_anonymous or current_user.is_authenticated):
+        return current_app.login_manager.unauthorized()
+    
+    server_ids = current_user.viewable_servers()
     res = []
     for id in server_ids:
         server = model.get_server_by_id(id)
@@ -76,12 +79,14 @@ def get_available_servers():
 @login_required
 def get_server_data(server_id):
     server_id = ObjectId(server_id)
-    if server_id not in current_user.viewable_servers:
+    if server_id not in current_user.viewable_servers():
         return make_responce("Not authorized to view server data", 401)
     
     server_data = model.get_server_by_id(server_id)
     channels = list(model.get_channels_data_by_server(server_id))
     users = list(model.get_server_users_public_data(server_id, stringify_ids=True))
+
+    print("found user list", users)
 
     for channel in channels:
         channel["id"] = str(channel.pop("_id"))

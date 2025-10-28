@@ -1,10 +1,12 @@
 import { BACKEND_URL } from '@/constants';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
+import type { UserData } from '../main/types';
 
-async function login(username: string, password: string): Promise<boolean> {
+async function postLogin(username: string, password: string): Promise<{success: boolean, user: UserData | null}> {
   const endpoint = new URL("api/login", BACKEND_URL)
-  const responce = await fetch(endpoint, {
+  const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include', 
     headers: {
@@ -15,8 +17,16 @@ async function login(username: string, password: string): Promise<boolean> {
       password: password
     })
   })
-  console.log(responce)
-  return responce.ok
+  console.log(response)
+  const data = await response.json()
+  const user: UserData | null = response.ok ? {
+    id: data.id,
+    username: data.username
+  } : null
+  return {
+    success: response.ok,
+    user: user
+  };
 }
 
 
@@ -25,16 +35,20 @@ function LogOn() {
   const [password, setPassword] = useState("")
   const navigate = useNavigate();
 
+  const { setStateLoggedin } = useAuthStatusContext();
+
   const SubmitValues = async (event: React.FormEvent) => {
     event.preventDefault()
     // //TODO Remove this!
     // navigate("/wizcord")
-    const success = await login(username, password)
+    const {success, user} = await postLogin(username, password)
     // return
-    if (!success) {
+    if (!success || user === null) {
         console.log("FAILED TO LOG IN")
     } else {
         console.log("Logged in!")
+
+        setStateLoggedin(user.username, user.id);
         navigate("/wizcord");
     }
   }

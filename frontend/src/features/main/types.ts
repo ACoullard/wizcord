@@ -8,7 +8,7 @@ export interface ServerData {
   id: string;
   name: string;
   channels: ChannelData[];
-  users: UserData[];
+  users: ServerMemberData[];
 }
 
 export interface MessageData {
@@ -18,8 +18,13 @@ export interface MessageData {
   timestamp: Date;
 }
 
-export interface UserData {
-  user_id: string,
+export interface ServerMemberData {
+  id: string,
   server_id: string,
   username: string
+}
+
+export interface UserData {
+  id: string;
+  username: string;
 }

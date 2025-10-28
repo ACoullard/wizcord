@@ -320,10 +320,17 @@ class Model:
             }
         }
 
+        rename_user_id = {
+            "$set": {
+                "id": "$user_id",
+                "user_id": "$$REMOVE"
+            }
+        }
+
         stringify = {
             "$addFields": {
                 "server_id": {"$toString": "$server_id"},
-                "user_id": {"$toString": "$user_id"},
+                "id": {"$toString": "$id"},
             }
         }
 
@@ -331,9 +338,9 @@ class Model:
             get_user_ids,
             lookup_user_data,
             unwind_user_data,
-            # isolate_user,
             merge_user_data,
-            clean_up_result
+            clean_up_result,
+            rename_user_id
         ]
 
         if stringify_ids:

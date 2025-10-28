@@ -1,4 +1,4 @@
-import type { MessageData, UserData } from '@main/types';
+import type { MessageData, ServerMemberData } from '@main/types';
 
 interface MessageItemProps {
     username: string;
@@ -20,13 +20,13 @@ function MessageItem({content, username, isSameUser}: MessageItemProps) {
 
 interface MessageListProps {
     messages: MessageData[]
-    users: UserData[]
+    users: ServerMemberData[]
 }
 
 function MessageList({messages, users}: MessageListProps) {
 
-    const userMap = users.reduce<Record<string, UserData>>((acc, user) => {
-        acc[user.user_id] = user;
+    const userMap = users.reduce<Record<string, ServerMemberData>>((acc, user) => {
+        acc[user.id] = user;
         return acc
     }, {})
 
