@@ -29,7 +29,7 @@ type ServerCacheEntry = {
 };
 
 export function useServerDataCache() {
-  console.log("useServerDataCache called");
+  // console.log("useServerDataCache called");
   const serverDataCache = useRef<Record<string, ServerCacheEntry>>({})
 
   const get_data_promise = useCallback((serverId: string): Promise<ServerData> => {

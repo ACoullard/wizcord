@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BACKEND_URL } from '@/constants';
+import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 
 interface ServerNameTag {
   id: string;
@@ -16,7 +17,7 @@ async function getServerList(): Promise<ServerNameTag[]>{
     }
 
     const json = await responce.json()
-    console.log(json)
+    console.log("fetched server list:", json)
     return json
   } catch (error) {
     console.error(error);
@@ -41,9 +42,12 @@ export function useServerList() {
   const [currentServer, setCurrentServer] = useState<ServerNameTag>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { userData } = useAuthStatusContext();
 
   useEffect(() => {
     let mounted = true;
+
+    console.log("running server list use effect")
 
     getCurrentUser()
       .then(() => getServerList())
@@ -65,7 +69,7 @@ export function useServerList() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [userData]);
 
   return { serverList, currentServer, setCurrentServer, isLoading, error };
 }

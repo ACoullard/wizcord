@@ -24,7 +24,7 @@ def login():
         if not result:
             return make_responce("Invalid login, user inactive", 401)
         else:
-            print("success\nlogged in user", username)
+            print("success - logged in user", username, id)
             return {"username":current_user.username, "id":current_user.id}, 200
     else:
         return make_responce("Invalid login", 401)
@@ -32,13 +32,17 @@ def login():
 @login_bp.post("anonymous")
 def login_anon():
     '''Logs in as a new anonymous user'''
-    login_user(AnonymousUser())
-    return make_responce("Successfully logged in", 200)
+    result = login_user(AnonymousUser(), remember=True)
+    if not result:
+        return make_responce("Invalid login, user inactive", 401)
+    else:
+        print("success - logged in anonymous user", current_user.username, current_user.id)
+        return  {"username":current_user.username, "id":current_user.id}, 200
 
     
 @login_bp.route("current-user")
 def get_current_user():
-    print("current user: ", current_user)
+    print("current user: ", current_user.username)
     if current_user.is_authenticated:
         return {"username":current_user.username, "id":current_user.id}, 200
     else:

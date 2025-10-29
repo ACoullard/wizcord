@@ -4,6 +4,7 @@ import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
 import { useMessageSSEListener } from '@main/hooks/useSSEListener';
 import { useServerList } from '@main/hooks/useServerList';
+import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { MessageData, ServerData, ChannelData, ServerMemberData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
 
@@ -49,6 +50,8 @@ function MainScreen() {
   const { serverList, currentServer, setCurrentServer } = useServerList()
   const get_server_data = useServerDataCache()
 
+  const { userData } = useAuthStatusContext()
+
   const [channelsList, setChannelsList] = useState<ChannelData[]>([])
   const [currentChannel, setCurrentChannel] = useState<ChannelData>()
 
@@ -61,6 +64,7 @@ function MainScreen() {
     if (currentServer == undefined) {
       return
     }
+    console.log("Fetching server data for:", currentServer.id)
     get_server_data(currentServer.id)
     .then((server_data) => {
       setChannelsList(server_data.channels)
@@ -162,6 +166,8 @@ function MainScreen() {
         </div>
         {/* Users List */}
         <div className='bg-secondary w-1/6 flex flex-col'>
+          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>Current User</p></div>
+              <p className='px-4'>{userData?.username}</p>
           <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>User List</p></div>
           <div className='p-4'>
             {userList.map(user => <p>{user.username}</p>)}

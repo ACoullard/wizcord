@@ -6,7 +6,7 @@ from flask_cors import CORS
 from redis import Redis
 from bson import ObjectId
 
-from api.shared_resources import model, User
+from api.shared_resources import model, User, AnonymousUser
 
 from api.api_bp import api_bp
 
@@ -24,6 +24,7 @@ app.config["PERMANENT_SESSION_LIFETIME"] = 60*60*3 # three hours in seconds
 Session(app)
 
 login_manager = flask_login.LoginManager()
+login_manager.anonymous_user = AnonymousUser
 login_manager.init_app(app)
 
 CORS(app, origins=[

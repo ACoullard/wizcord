@@ -1,18 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '@/constants';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
+import type { UserData } from '@main/types';
 
-async function loginAnon(): Promise<boolean> {
+async function loginAnon(): Promise<{success: boolean, user: UserData | null}> {
   const endpoint = new URL("api/login/anonymous", BACKEND_URL)
-  const responce = await fetch(endpoint, {
+  const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include', 
     headers: {
       'Content-Type': 'application/json'
     }
   })
-  console.log(responce)
-  return responce.ok
+  console.log(response)
+  const data = await response.json()
+  const user = response.ok ? data as UserData : null
+  return { success: response.ok, user: user }
 }
 
 
@@ -30,9 +33,9 @@ function LandingPage() {
       <button
         className="w-4/5 h-14 bg-border text-white text-xl rounded-full font-pixel hover:bg-lists transition duration-300 ease-in-out"
         onClick={async () => {
-          const success = await loginAnon();
-          if (success) {
-            setStateLoggedinAnonymous();
+          const result = await loginAnon();
+          if (result.success && result.user !== null) {
+            setStateLoggedinAnonymous(result.user);
             navigate("/wizcord");
           } else {
             console.error("Login failed");

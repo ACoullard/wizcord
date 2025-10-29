@@ -2,7 +2,7 @@ import { BACKEND_URL } from '@/constants';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
-import type { UserData } from '../main/types';
+import type { UserData } from '@main/types';
 
 async function postLogin(username: string, password: string): Promise<{success: boolean, user: UserData | null}> {
   const endpoint = new URL("api/login", BACKEND_URL)
@@ -19,14 +19,8 @@ async function postLogin(username: string, password: string): Promise<{success: 
   })
   console.log(response)
   const data = await response.json()
-  const user: UserData | null = response.ok ? {
-    id: data.id,
-    username: data.username
-  } : null
-  return {
-    success: response.ok,
-    user: user
-  };
+  const user = response.ok ? data as UserData : null
+  return { success: response.ok, user: user }
 }
 
 
@@ -48,7 +42,7 @@ function LogOn() {
     } else {
         console.log("Logged in!")
 
-        setStateLoggedin(user.username, user.id);
+        setStateLoggedin(user);
         navigate("/wizcord");
     }
   }

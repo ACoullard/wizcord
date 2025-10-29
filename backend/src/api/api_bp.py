@@ -61,7 +61,7 @@ def respond_e2ee():
 def get_available_servers():
     if not (current_user.is_anonymous or current_user.is_authenticated):
         return current_app.login_manager.unauthorized()
-    
+    print("getting available servers for user:", current_user.username)
     server_ids = current_user.viewable_servers()
     res = []
     for id in server_ids:

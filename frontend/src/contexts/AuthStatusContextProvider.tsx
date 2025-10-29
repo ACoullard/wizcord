@@ -1,14 +1,14 @@
 import React, { createContext, useState, useContext } from 'react';
 import type { ReactNode } from 'react';
+import type { UserData } from '../features/main/types';
 
 interface AuthStatusContextType {
   isAuthenticated: boolean;
   isAnonymous: boolean;
-  username: string | null;
-  userId: string | null;
-  setStateLoggedin: (username: string, userId: string) => void;
+  userData: UserData | null;
+  setStateLoggedin: (userData: UserData) => void;
   setStateLoggedout: () => void;
-  setStateLoggedinAnonymous: () => void;
+  setStateLoggedinAnonymous: (userData: UserData) => void;
 }
 
 
@@ -17,31 +17,36 @@ const AuthStatusContext = createContext<AuthStatusContextType | undefined>(undef
 export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
-  const setStateLoggedin = (username: string, userId: string) => {
+  const setStateLoggedin = (userData: UserData) => {
     setIsAuthenticated(true);
-    setUsername(username);
-    setUserId(userId);
+    setIsAnonymous(false);
+    setUserData(userData);
   };
 
-  const setStateLoggedinAnonymous = () => {
+  const setStateLoggedinAnonymous = (userData: UserData) => {
     setIsAuthenticated(true);
     setIsAnonymous(true);
-    setUsername("guest");
-    setUserId("guest");
+    setUserData(userData);
   };
 
   const setStateLoggedout = () => {
     setIsAuthenticated(false);
-    setUsername(null);
-    setUserId(null);
+    setIsAnonymous(false);
+    setUserData(null);
   };
 
   return (
     <AuthStatusContext.Provider
-      value={{ isAuthenticated, isAnonymous, username, userId, setStateLoggedin, setStateLoggedout, setStateLoggedinAnonymous }}
+      value={{ 
+        isAuthenticated, 
+        isAnonymous, 
+        userData, 
+        setStateLoggedin, 
+        setStateLoggedout, 
+        setStateLoggedinAnonymous 
+      }}
     >
       {children}
     </AuthStatusContext.Provider>

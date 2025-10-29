@@ -182,7 +182,7 @@ class Model:
             
         return result.inserted_id
     
-    def add_user(self, username: str, email: str):
+    def add_user(self, username: str, email: str) -> ObjectId:
         result = self.users.insert_one({
             "username": username,
             "email": email
@@ -410,6 +410,28 @@ class Model:
     def channel_exists(self, channel_id: ObjectId):
         channel = self.channels.find_one({"_id": channel_id})
         return channel is not None
+    
+
+# Shared server stuff
+    
+    def get_shared_servers(self):
+        shared_server = self.servers.find_one({"name":"Wizcord Shared Server"})
+
+        if shared_server is None:
+            shared_server_id = self.add_server("Wizcord Shared Server")
+            self.add_channel("General", shared_server_id)
+            print("Created shared server with id:", shared_server_id)
+            shared_server = self.servers.find_one({"_id": shared_server_id})
+       
+        return [shared_server]
+        
+    def add_user_to_shared_server(self, user_id: ObjectId):
+        shared_servers = self.get_shared_servers()
+        for shared_server in shared_servers:
+            shared_server_id = shared_server["_id"]
+            if not self.user_is_server_member(user_id, shared_server_id):
+                self.add_user_to_server(user_id, shared_server_id)
+                print(f"Added user {user_id} to shared server")
 
     def close(self):
         self.client.close()
