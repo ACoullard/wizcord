@@ -127,14 +127,15 @@ class Model:
     def __init__(self):
         pass
 
-    def connect(self):
+    def connect(self, verbose = True):
         self.client = MongoClient(
             DB_HOSTNAME,
             DB_PORT,
             username="admin",
             password="password",
             serverSelectionTimeoutMS=2000)
-        print("opened pyMongo connection")
+        if verbose:
+            print("opened pyMongo connection")
         # atexit.register(self.close)
         
         self.db = self.client[DB_NAME]
@@ -203,10 +204,16 @@ class Model:
             return None
 
     def get_viewable_server_ids(self, user_id: ObjectId):
-        """Gets the servers a certain user has access to"""
+        """Gets the server ids a certain user has access to"""
         server_id_list = self.server_members.distinct("server_id", {"user_id":user_id})
 
         return server_id_list
+    
+    # admin command
+    def get_all_servers(self) -> Cursor:
+        """Gets a list of all servers in the database"""
+        server_list = self.servers.find({})
+        return server_list
     
     def get_server_by_id(self, server_id: ObjectId):
         server = self.servers.find_one({"_id":server_id})
@@ -225,7 +232,12 @@ class Model:
         if user is None:
             raise ValueError(f"No user exists by the id {user_id}")
         return user
-        
+    
+    # admin command
+    def get_all_users(self) -> Cursor:
+        """Gets a list of all users in the database"""
+        user_list = self.users.find({})
+        return user_list
 
     def get_channel_ids_by_server(self, server_id: ObjectId):
         channels = self.channels.find({"server_id":server_id},)
@@ -240,10 +252,6 @@ class Model:
             {"server_id": server_id},
             {"_id": 1})
         return members
-    
-    def get_user_ids_by_server(self, server_id: ObjectId) -> Cursor: 
-        user_datas = self.server_members.find({"server_id": server_id})
-        return user_datas
     
     def get_paginated_messages(self, channel_id: ObjectId, page_num: int = 1, page_size: int = 10):
 
@@ -433,9 +441,10 @@ class Model:
                 self.add_user_to_server(user_id, shared_server_id)
                 print(f"Added user {user_id} to shared server")
 
-    def close(self):
+    def close(self, verbose = True):
         self.client.close()
-        print("Closed pyMongo connection")
+        if verbose:
+            print("Closed pyMongo connection")
 
 
 
