@@ -116,6 +116,7 @@ messages:{
         "author_id",
         "timestamp",
         "channel_id",
+        "hidden": bool
     }
 }
 
@@ -150,14 +151,27 @@ class Model:
     def add_message(self, author_id: ObjectId, channel_id: ObjectId, content: str, timestamp: None | datetime = None) -> ObjectId:
         if timestamp is None:
             timestamp = datetime.now(tz=timezone.utc)
+
+        author_id = ObjectId(author_id)
+        channel_id = ObjectId(channel_id)
             
         result = self.messages.insert_one({
             "author_id": author_id,
             "channel_id": channel_id,
             "timestamp": timestamp,
-            "content": content
+            "content": content,
+            "hidden": False
         })
         return result.inserted_id
+    
+    def hide_message(self, message_id: ObjectId):
+        """Hides a given message by altering its "hidden" attribute  
+        Returns the number of modified documents (should be 1 or 0)"""
+        result = self.messages.update_one(
+            {"_id": message_id},
+            {"$set": {"hidden": True}}
+        )
+        return result.modified_count
     
     def add_server(self, server_name: str):
         result = self.servers.insert_one({
@@ -168,18 +182,15 @@ class Model:
         return result.inserted_id
     
     def add_channel(self, channel_name: str, server_id: None | ObjectId = None):
-        if server_id is not None:
-            if self.servers.find_one({"_id": server_id}) is None:
-                raise ValueError("given server id does not exist")
-            
-            result = self.channels.insert_one({
-                "server_id": server_id,
-                "name": channel_name
-            })
-        else:
-            result = self.channels.insert_one({
-                "name": channel_name
-            })
+        creation_date = datetime.now(tz=timezone.utc)
+        if self.servers.find_one({"_id": server_id}) is None:
+            raise ValueError("given server id does not exist")
+        
+        result = self.channels.insert_one({
+            "server_id": server_id,
+            "name": channel_name,
+            "creation_date": creation_date,
+        })
             
         return result.inserted_id
     
@@ -190,8 +201,17 @@ class Model:
         })
         return result.inserted_id
 
-    def get_messages_in_channel(self, channel_id: ObjectId):
-        return list(self.messages.find({"channel_id":channel_id}))
+    def get_messages_filtered(self, channel_id: ObjectId | None = None, user_id: ObjectId | None = None, show_hidden: bool = False):
+        query = {}
+        if channel_id is not None:
+            query["channel_id"] = channel_id
+        if user_id is not None:
+            query["author_id"] = user_id
+        if not show_hidden:
+            query["hidden"] = False
+
+        messages = self.messages.find(query)
+        return messages
 
 
     def get_user_id_by_username(self, username: str):
@@ -253,7 +273,7 @@ class Model:
             {"_id": 1})
         return members
     
-    def get_paginated_messages(self, channel_id: ObjectId, page_num: int = 1, page_size: int = 10):
+    def get_paginated_messages(self, channel_id: ObjectId, page_num: int = 1, page_size: int = 10, show_hidden: bool = False):
 
         get_count = [{ "$count": "totalCount" }]
 
@@ -264,10 +284,12 @@ class Model:
             { "$limit": page_size }
         ]
 
+        match_stage = {"$match": {"channel_id": channel_id}}
+        if not show_hidden:
+            match_stage["$match"]["hidden"] = False
+
         pipeline = [
-            {
-                "$match": {"channel_id": channel_id}
-            },
+            match_stage,
             {
                 "$sort": {"timestamp": -1}
             },
@@ -510,7 +532,7 @@ if __name__ == "__main__":
 
 
     # message_result = model.add_message(user_1_id, channel_id, datetime.now(), "test message test message")
-    # messages = model.get_messages_in_channel(channel_id)
+    # messages = model.get_messages_by_channel(channel_id)
     # print("\nMessages:")
     # for message in messages:
     #     author_username = model.get_user_by_id(message["author_id"])["username"]
