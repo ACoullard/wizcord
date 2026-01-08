@@ -25,7 +25,7 @@ def login():
             return make_responce("Invalid login, user inactive", 401)
         else:
             print("success - logged in user", username, id)
-            return {"username":current_user.username, "id":current_user.id}, 200
+            return package_user_data(), 200
     else:
         return make_responce("Invalid login", 401)
 
@@ -37,7 +37,7 @@ def login_anon():
         return make_responce("Invalid login, user inactive", 401)
     else:
         print("success - logged in anonymous user", current_user.username, current_user.id)
-        return  {"username":current_user.username, "id":current_user.id}, 200
+        return  package_user_data(), 200
 
     
 @login_bp.route("current-user")
@@ -46,7 +46,7 @@ def get_current_user():
     if current_user.is_authenticated:
         return {"username":current_user.username, "id":current_user.id}, 200
     else:
-        return {"username":None}, 200
+        return make_responce("No authenticated user", 401)
 
 
 def verify_login_username_only(username: str):
@@ -58,3 +58,6 @@ def verify_login_username_only(username: str):
     
 def verify_login(username: str, password: str):
     pass
+
+def package_user_data():
+    return  {"username":current_user.username, "id":current_user.id}
