@@ -1,6 +1,8 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import type { UserData } from '../features/main/types';
+import type { UserData } from '@/features/main/types';
+import { BACKEND_URL } from '@/constants';
+
 
 interface AuthStatusContextType {
   isAuthenticated: boolean;
@@ -17,6 +19,7 @@ const AuthStatusContext = createContext<AuthStatusContextType | undefined>(undef
 export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
 
   const setStateLoggedin = (userData: UserData) => {
@@ -36,6 +39,27 @@ export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ c
     setIsAnonymous(false);
     setUserData(null);
   };
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch(new URL("api/login/current-user", BACKEND_URL), {
+          method: 'GET',
+          credentials: 'include',
+        })
+        if (!res.ok) {
+          throw new Error("Not authenticated");
+        }
+        const data = await res.json();
+        setStateLoggedin(data as UserData);
+      } catch {
+        setStateLoggedout();
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    checkAuth();
+  }, [])
 
   return (
     <AuthStatusContext.Provider
