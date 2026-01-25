@@ -8,13 +8,17 @@ interface MessageItemProps {
 
 function MessageItem({content, username, isSameUser}: MessageItemProps) {
     return (
-            <>
-                <div className="flex flex-col justify-end p-1">
-                    {!isSameUser && <div className="h-5 center text-left"><b>{username}</b></div>}
-                    <div className="h-5 p-l-3"><p>{content}</p></div>
-                </div>
-                {/* TODO: Check if this is the first message, if no, put a little border thing, same as is done with servers. */}
-            </>
+        <>
+            <div className="flex flex-col justify-end p-1">
+                {!isSameUser && (<>
+                    <hr className=""></hr>
+                    <div className="h-5 center text-left">
+                        <b>{username}</b>
+                    </div>
+                </>)}
+                <div className="w-full break-all">{content}</div>
+            </div>
+        </>
     )
 }
 

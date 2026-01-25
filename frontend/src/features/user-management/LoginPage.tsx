@@ -47,7 +47,7 @@ function LogOn() {
     }
   }
     return (
-        <div className="h-screen bg-lists flex justify-center items-center">
+        <div className="h-screen bg-primary flex justify-center items-center">
             <div className="flex flex-col rounded-2xl w-1/3 bg-secondary py-8">
                 <div className="h-1/8 flex items-center justify-center">
                     <p className="font-pixel text-4xl text-white">
@@ -73,7 +73,7 @@ function LogOn() {
                         />
                         <button
                             type="submit"
-                            className="h-12 bg-border text-white rounded-full font-pixel hover:bg-lists transition duration-300 ease-in-out">
+                            className="h-12 bg-highlight text-white rounded-full font-pixel hover:bg-primary transition duration-300 ease-in-out">
                             Log In
                         </button>
                     </form>

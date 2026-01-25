@@ -7,6 +7,7 @@ import { useServerList } from '@main/hooks/useServerList';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { MessageData, ServerData, ChannelData, ServerMemberData } from '@main/types';
 import { BACKEND_URL } from '@/constants';
+import TextareaAutosize from 'react-textarea-autosize';
 
 async function getMessages(channelId: string): Promise<MessageData[]> {
   const endpoint = new URL(`api/channel/${channelId}`, BACKEND_URL)
@@ -46,7 +47,7 @@ async function postMessage(message: string, channel_id: string) {
 }
 
 function MainScreen() {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const { serverList, currentServer, setCurrentServer } = useServerList()
   const get_server_data = useServerDataCache()
 
@@ -94,18 +95,18 @@ function MainScreen() {
   }, [messagesList])
   
   
-  function handleMessageSubmit(event: React.KeyboardEvent<HTMLInputElement>) {
-  if (event.key === "Enter" && inputRef.current != null && currentChannel) {
-    postMessage(inputRef.current.value, currentChannel.id)
-    .then((succeeded) => {
-      if (succeeded && inputRef.current != null) {
-        inputRef.current.value = ""
-      } else {
-        console.error("message failed to send")
-      }
-    })
+  function handleMessageSubmit(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Enter" && !event.shiftKey && inputRef.current != null && currentChannel) {
+      event.preventDefault()
+      const text = inputRef.current.value.trim()
+      if (!text) return
+      postMessage(text, currentChannel.id)
+        .then((succeeded) => {
+          if (succeeded && inputRef.current != null) inputRef.current.value = ""
+          else console.error("message failed to send")
+        })
+    }
   }
-  };
   
   function incomingMessageHandler(data: MessageData) {
     console.log("incoming message:", data.content)
@@ -126,8 +127,8 @@ function MainScreen() {
           </button>
         </div>
         {/* Channel List Div */}
-        <div className='bg-lists border-l-3 border-l-[#5a61cc] w-1/7 flex flex-col p-b-0'>
-          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>Channel List</p></div>
+        <div className='bg-primary border-l-3 border-l-[#5a61cc] w-1/7 flex flex-col p-b-0'>
+          <div className='bg-secondary text-center flex text-highlight h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>Channel List</p></div>
           {/* A generic template for any channel, must include onclick react implementation onto top div */}
           <div className='p-2 bg-secondary h-full overflow-y-auto'>
             <ChannelList onChannelClick={(name) => {
@@ -137,7 +138,7 @@ function MainScreen() {
           </div>
         </div>
         {/* Message List Div, check if the same user sent the last message, if so, do not use their pfp */}
-        <div className='bg-border w-29/42 flex flex-col p-2'>
+        <div className='bg-primary w-29/42 flex flex-col p-2'>
         {/* The Actual Messages listed through React function */}
           <div className='flex-grow relative'>
             <div ref={messageScrollContainer} className='overflow-y-auto h-full w-full absolute'>
@@ -146,29 +147,33 @@ function MainScreen() {
                 users={userList}/>
             </div>
           </div>
-          <div className='bg-lists text-white h-1/18 mt-auto rounded-full m-2 flex flex-row mb-3 shadow-md shadow-[#00FFFF]/70 focus-within:shadow-[0_0_20px_#00FFFF] transition delay-10 duration-400 ease-in-out'>
-            <input 
+          <div className='bg-tertiary min-h-1/18 mt-auto rounded-4xl m-2 flex flex-row items-center
+            shadow-[0_0_16px_rgba(0,255,255,0.5)] 
+            hover:shadow-[0_0_18px_rgba(0,255,255,0.7)] 
+            focus-within:shadow-[0_0_20px_#00FFFF]
+            hover:focus-within:shadow-[0_0_23px_#00FFFF] 
+            transition duration-400 ease-in-out'>
+            <TextareaAutosize
               ref={inputRef}
-              className ="shadow- appearance-none h-full rounded-full w-14/15 py-2 px-3 
-              message-text leading-tight focus:outline-none focus:shadow-outline placeholder-white placeholder-Pixel" 
+              className ="flex-grow py-2 px-5 break-all resize-none
+              message-text leading-tight focus:outline-none focus:shadow-outline placeholder-pixel" 
               id="input"
-              type="text"
               placeholder="Cast your spells here!"
               autoCorrect='off'
               autoComplete='off'
-              data-lpignore="true"
-              onKeyUp={handleMessageSubmit}
+              data-lpignore='true'
+              onKeyDown={handleMessageSubmit}
             />
-            <button className='ml-2'>
-              <img className='w-12 h-10 rounded-full object-contain scale-100' src="/Send-Image.jpg" alt=""/>
+            <button className='flex w-12 aspect-square p-1'>
+              <img className='rounded-full h-full w-full object-contain' src="/Send-Image.jpg" alt=""/>
             </button>
           </div>
         </div>
         {/* Users List */}
         <div className='bg-secondary w-1/6 flex flex-col'>
-          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>Current User</p></div>
+          <div className='bg-secondary text-center flex text-highlight h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>Current User</p></div>
               <p className='px-4'>{userData?.username}</p>
-          <div className='bg-secondary text-center flex text-border h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>User List</p></div>
+          <div className='bg-secondary text-center flex text-highlight h-1/25 p-1 items-center justify-center border-b-3 border-b-[#5a61cc]'><p>User List</p></div>
           <div className='p-4'>
             {userList.map(user => <p>{user.username}</p>)}
           </div>

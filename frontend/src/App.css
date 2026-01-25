@@ -1,9 +1,19 @@
 @import "tailwindcss";
+
 @theme {
   --color-titlebar: #211c84;
-  --color-border: #b5a8d5;
+  --color-highlight: #b5a8d5;
+  --color-tertiary: #847dd2;
   --color-secondary: #4d55cc;
-  --color-lists: #7a73d1;
+  --color-primary: #7a73d1;
+
+  --color-text-primary: var(--color-zinc-200)
+}
+
+@layer base {
+  html {
+    @apply text-text-primary;
+  }
 }
 body {
   padding: 0;
