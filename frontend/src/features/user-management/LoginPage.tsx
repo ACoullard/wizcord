@@ -1,4 +1,3 @@
-import { BACKEND_URL } from '@/constants';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
