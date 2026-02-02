@@ -6,11 +6,10 @@ import { useMessageSSEListener } from '@main/hooks/useSSEListener';
 import { useServerList } from '@main/hooks/useServerList';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { MessageData, ServerData, ChannelData, ServerMemberData } from '@main/types';
-import { BACKEND_URL } from '@/constants';
 import TextareaAutosize from 'react-textarea-autosize';
 
 async function getMessages(channelId: string): Promise<MessageData[]> {
-  const endpoint = new URL(`api/channel/${channelId}`, BACKEND_URL)
+  const endpoint = new URL(`api/channel/${channelId}`, window.location.origin);
   endpoint.searchParams.set("limit", "100")
   const responce = await fetch(endpoint, {
     credentials: 'include'
@@ -32,7 +31,7 @@ async function getMessages(channelId: string): Promise<MessageData[]> {
 
 async function postMessage(message: string, channel_id: string) {
   // console.log(message)
-  const endpoint = new URL(`api/channel/${channel_id}/post`, BACKEND_URL)
+  const endpoint = `api/channel/${channel_id}/post`
   const responce = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include', 
@@ -147,6 +146,7 @@ function MainScreen() {
                 users={userList}/>
             </div>
           </div>
+          {/* TODO: This should probably be broken out into another component at this point*/}
           <div className='bg-tertiary min-h-1/18 mt-auto rounded-4xl m-2 flex flex-row items-center
             shadow-[0_0_16px_rgba(0,255,255,0.5)] 
             hover:shadow-[0_0_18px_rgba(0,255,255,0.7)] 

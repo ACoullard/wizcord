@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { UserData } from '@/features/main/types';
-import { BACKEND_URL } from '@/constants';
 
 
 interface AuthStatusContextType {
@@ -43,7 +42,7 @@ export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ c
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(new URL("api/login/current-user", BACKEND_URL), {
+        const res = await fetch("api/login/current-user", {
           method: 'GET',
           credentials: 'include',
         })

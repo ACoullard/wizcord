@@ -1,12 +1,10 @@
 import type { ServerData } from '@main/types';
 import { useRef, useCallback } from 'react';
 
-import { BACKEND_URL } from '@/constants';
 
 
 async function get_server_data(serverId: string): Promise<ServerData> {
-  const baseEndpoint = new URL("api/server-data/", BACKEND_URL)
-  const endpoint = new URL(serverId, baseEndpoint)
+  const endpoint = `api/server-data/${serverId}`
   try {
     const responce =  await fetch(endpoint, {
       credentials: "include"

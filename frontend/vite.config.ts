@@ -12,5 +12,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@main": path.resolve(__dirname, "./src/features/main")
     }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      }  
+    }
   }
 })

@@ -1,9 +1,8 @@
 import { useRef, useEffect } from 'react';
-import { BACKEND_URL } from '@/constants';
 import type { MessageData } from '@main/types';
 
 
-const endpoint = new URL(`api/channel/message-stream`, BACKEND_URL);
+const endpoint = new URL(`api/channel/message-stream`, window.location.origin);
 
 type eventListner = (data: MessageData) => any
 

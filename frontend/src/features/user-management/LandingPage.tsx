@@ -1,11 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { BACKEND_URL } from '@/constants';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { UserData } from '@main/types';
 
 async function loginAnon(): Promise<{success: boolean, user: UserData | null}> {
-  const endpoint = new URL("api/login/anonymous", BACKEND_URL)
-  const response = await fetch(endpoint, {
+  const response = await fetch("api/login/anonymous", {
     method: 'POST',
     credentials: 'include', 
     headers: {

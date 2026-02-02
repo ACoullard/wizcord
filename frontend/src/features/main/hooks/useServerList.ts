@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { BACKEND_URL } from '@/constants';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 
 interface ServerNameTag {
@@ -9,9 +8,8 @@ interface ServerNameTag {
 }
 
 async function getServerList(): Promise<ServerNameTag[]>{
-  const endpoint = new URL("api/servers", BACKEND_URL)
   try {
-    const responce =  await fetch(endpoint, {credentials: 'include'})
+    const responce =  await fetch("api/servers", {credentials: 'include'})
     if (!responce.ok) {
       throw new Error("unable to fetch servers data")
     }
@@ -26,8 +24,7 @@ async function getServerList(): Promise<ServerNameTag[]>{
 }
 
 async function getCurrentUser() {
-  const endpoint = new URL("api/login/current-user", BACKEND_URL)
-  const responce = await fetch(endpoint, {
+  const responce = await fetch("api/login/current-user", {
     credentials: 'include'
   })
   if (!responce.ok) {

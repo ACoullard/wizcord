@@ -5,7 +5,7 @@ import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { UserData } from '@main/types';
 
 async function postLogin(username: string, password: string): Promise<{success: boolean, user: UserData | null}> {
-  const endpoint = new URL("api/login", BACKEND_URL)
+  const endpoint = "api/login"
   const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include', 

@@ -12,11 +12,11 @@ from api.api_bp import api_bp
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.urandom(16).hex()
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(16).hex())
 
 
 app.config["SESSION_TYPE"] = "redis"
-app.config["SESSION_REDIS"] = Redis.from_url('redis://127.0.0.1:6379')
+app.config["SESSION_REDIS"] = Redis.from_url(os.environ.get("REDIS_URL", 'redis://127.0.0.1:6379'))
 app.config["SESSION_PERMANENT"] = True
 # app.config["SESSION_COOKIE_SECURE"] = True # TODO: put this back to true in production
 app.config["PERMANENT_SESSION_LIFETIME"] = 60*60*3 # three hours in seconds
@@ -45,3 +45,8 @@ def load_user(user_id):
         return None
 
 app.register_blueprint(api_bp)
+
+# Health check endpoint for Docker
+@app.route('/health')
+def health_check():
+    return {'status': 'healthy'}, 200

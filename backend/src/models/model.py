@@ -7,11 +7,14 @@ from bson.objectid import ObjectId
 from dataclasses import dataclass
 
 import json
+import os
 
-DB_HOSTNAME = "localhost"
-DB_PORT = 27017
+DB_HOSTNAME = os.environ.get("MONGODB_HOSTNAME", "localhost")
+DB_PORT = int(os.environ.get("MONGODB_PORT", "27017"))
+DB_USERNAME = os.environ.get("MONGODB_USERNAME", "admin")
+DB_PASSWORD = os.environ.get("MONGODB_PASSWORD", "password")
 
-DB_NAME = "wizcord"
+DB_NAME = os.environ.get("MONGODB_DATABASE", "wizcord")
 MESSAGES_COLL_NAME = "messages"
 SERVERS_COLL_NAME = "servers"
 CHANNELS_COLL_NAME = "channels"
@@ -132,8 +135,8 @@ class Model:
         self.client = MongoClient(
             DB_HOSTNAME,
             DB_PORT,
-            username="admin",
-            password="password",
+            username=DB_USERNAME,
+            password=DB_PASSWORD,
             serverSelectionTimeoutMS=2000)
         if verbose:
             print("opened pyMongo connection")
