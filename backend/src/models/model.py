@@ -315,18 +315,23 @@ class Model:
             "$match": {"server_id": server_id},
         }
 
-        public_user_data_pipeline = [
-            {"$project": {
-                "username": 1,
-                "_id":0
-            }}
-        ]
         lookup_user_data = {
             "$lookup": {
-                "from":"users",
-                "localField": "user_id",
-                "foreignField": "_id",
-                "pipeline": public_user_data_pipeline,
+                "from": "users",
+                "let": {"user_id": "$user_id"},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "$expr": {"$eq": ["$_id", "$$user_id"]}
+                        }
+                    },
+                    {
+                        "$project": {
+                            "username": 1,
+                            "_id": 0
+                        }
+                    }
+                ],
                 "as": "user_data"
             }
         }
