@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import ChannelList from '@/features/main/components/ChannelList';
 import MessageList from '@main/components/MessageList';
 import { useServerDataCache } from '@main/hooks/useServerDataCache';
-import { useMessageSSEListener } from '@main/hooks/useSSEListener';
+import { useMessageSSEListener, useServerMemberSSEListener } from '@main/hooks/useSSEListener';
 import { useServerList } from '@main/hooks/useServerList';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { MessageData, ServerData, ChannelData, ServerMemberData } from '@main/types';
@@ -113,6 +113,16 @@ function MainScreen() {
   }
   
   useMessageSSEListener(currentChannel?.id, incomingMessageHandler)
+
+  function incomingMemberHandler(member: ServerMemberData) {
+    console.log('incoming member', member)
+    setUserList(prev => {
+      if (prev.some(u => u.id === member.id)) return prev
+      return [...prev, member]
+    })
+  }
+
+  useServerMemberSSEListener(currentServer?.id, incomingMemberHandler)
   
   return (
     <div className='flex flex-col h-screen'>
