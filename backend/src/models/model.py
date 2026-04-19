@@ -197,10 +197,11 @@ class Model:
             
         return result.inserted_id
     
-    def add_user(self, username: str, email: str) -> ObjectId:
+    def add_user(self, username: str, email: str, is_anonymous: bool = False) -> ObjectId:
         result = self.users.insert_one({
             "username": username,
-            "email": email
+            "email": email,
+            "is_anonymous": is_anonymous
         })
         return result.inserted_id
 

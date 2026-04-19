@@ -16,15 +16,32 @@ channel_bp = Blueprint("channel", __name__, url_prefix="/channel")
 observers_dict: Dict[str, ChannelMessagesObserver] = {}
 
 
+def _get_authorized_channel(channel_id: str):
+    """Fetch channel and verify current user can view it.
+    Returns (channel, None) on success, (None, error_response) on failure.
+    """
+    try:
+        channel = model.get_channel_by_id(ObjectId(channel_id))
+    except Exception:
+        return None, ("Invalid channel id", 400)
+    if channel["server_id"] not in current_user.viewable_servers():
+        return None, ("Not authorized to view channel", 401)
+    return channel, None
+
+
 
 
 @channel_bp.route("/<channel_id>")
+@login_required
 def get_messages(channel_id):
+    _, err = _get_authorized_channel(channel_id)
+    if err:
+        return err
+
     page_num = request.args.get("page", default=0, type=int)
     page_limit = request.args.get("limit", default=10, type=int)
 
     result = list(model.get_paginated_messages(ObjectId(channel_id), page_num, page_limit))[0]
-    
 
     for message in result["data"]:
         message["id"] = str(message.pop("_id"))
@@ -36,11 +53,12 @@ def get_messages(channel_id):
 @login_required
 def message_stream():
     channel_id = request.args.get("channel", type=str)
+    _, err = _get_authorized_channel(channel_id)
+    if err:
+        return err
+
     if channel_id not in observers_dict:
-        if model.channel_exists(ObjectId(channel_id)):
-            observers_dict[channel_id] = ChannelMessagesObserver()
-        else:
-            return "Invalid channel id", 400
+        observers_dict[channel_id] = ChannelMessagesObserver()
     
     observer = observers_dict[channel_id]
     listener = observer.add_listener()
@@ -88,6 +106,10 @@ def server_member_stream():
 @channel_bp.post("/<channel_id>/post")
 @login_required
 def post_message(channel_id):
+    _, err = _get_authorized_channel(channel_id)
+    if err:
+        return err
+
     req = request.get_json()
 
     if channel_id not in observers_dict:
