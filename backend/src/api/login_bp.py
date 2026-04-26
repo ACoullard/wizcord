@@ -1,10 +1,10 @@
 from flask import Blueprint, request
 from flask_login import login_user, current_user
+import json
 
 from utils import make_responce
-from .shared_resources import model, User
+from .shared_resources import model, User, redis_client
 from models.anonymous_username_builder import build_anonymous_username
-from observers import server_members_observers
 
 login_bp = Blueprint("login", __name__, url_prefix="login")
 
@@ -79,9 +79,11 @@ def _create_and_publish_anonymous_user():
         shared_servers = model.get_shared_servers()
         for shared_server in shared_servers:
             server_id_str = str(shared_server["_id"])
-            observer = server_members_observers.get(server_id_str)
-            if observer is not None:
-                observer.publish(str(object_id), server_id_str, username)
+            redis_client.publish(f"server_members:{server_id_str}", json.dumps({
+                "id": str(object_id),
+                "server_id": server_id_str,
+                "username": username
+            }))
     except Exception:
         # best effort publish; do not fail on publish errors
         pass

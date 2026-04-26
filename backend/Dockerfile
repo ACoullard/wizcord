@@ -31,9 +31,10 @@ EXPOSE 8000
 # Run Gunicorn with optimized settings for production
 CMD ["gunicorn", \
      "--bind", "0.0.0.0:8000", \
-     "--workers", "4", \
-     "--worker-class", "sync", \
-     "--timeout", "120", \
+     "--workers", "2", \
+     "--worker-class", "gthread", \
+     "--threads", "50", \
+     "--timeout", "0", \
      "--access-logfile", "-", \
      "--error-logfile", "-", \
      "--log-level", "info", \
