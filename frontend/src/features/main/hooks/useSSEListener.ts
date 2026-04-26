@@ -1,24 +1,17 @@
 import { useRef, useEffect } from 'react';
 import type { MessageData, ServerMemberData } from '@main/types';
 
+type messageEventListener = (data: MessageData) => void
+type memberEventListener = (data: ServerMemberData) => void
 
-const messageEndpoint = new URL(`api/channel/message-stream`, window.location.origin);
-const serverMemberEndpoint = new URL(`api/channel/server-member-stream`, window.location.origin);
+export function useMessageSSEListener(channelId: string, onEvent: messageEventListener) {
+    const onEventRef = useRef(onEvent);
+    onEventRef.current = onEvent;
 
-type messageEventListner = (data: MessageData) => any
-type memberEventListner = (data: ServerMemberData) => any
-
-export function useMessageSSEListener(channelId: string | undefined, onEvent: messageEventListner) {
-    const eventSourceRef = useRef<EventSource>(null);
-    useEffect( () => {
-        if (channelId == undefined) {
-            return
-        }
-        messageEndpoint.searchParams.set('channel', channelId)
-        const eventSource = new EventSource(messageEndpoint, {
-            withCredentials: true,
-            });
-        eventSourceRef.current = eventSource;
+    useEffect(() => {
+        const url = new URL(`api/channel/message-stream`, window.location.origin);
+        url.searchParams.set('channel', channelId);
+        const eventSource = new EventSource(url, { withCredentials: true });
 
         eventSource.onmessage = (event) => {
             const rawMessageData = JSON.parse(event.data);
@@ -27,31 +20,28 @@ export function useMessageSSEListener(channelId: string | undefined, onEvent: me
                 content: rawMessageData.content,
                 timestamp: new Date(rawMessageData.timestamp),
                 user: rawMessageData.author_id
-            } 
-            console.log(message)
-
-            onEvent(message);
+            };
+            onEventRef.current(message);
         };
 
-        // tear down function. useEffect works like that ig
+        eventSource.onerror = () => {
+            console.error('Message SSE error — EventSource will reconnect');
+        };
+
         return () => {
             eventSource.close();
-        }
-    }, [onEvent, channelId])
-    
-};
+        };
+    }, [channelId]);
+}
 
-export function useServerMemberSSEListener(serverId: string | undefined, onEvent: memberEventListner) {
-    const eventSourceRef = useRef<EventSource>(null);
-    useEffect( () => {
-        if (serverId == undefined) {
-            return
-        }
-        serverMemberEndpoint.searchParams.set('server', serverId)
-        const eventSource = new EventSource(serverMemberEndpoint, {
-            withCredentials: true,
-            });
-        eventSourceRef.current = eventSource;
+export function useServerMemberSSEListener(serverId: string, onEvent: memberEventListener) {
+    const onEventRef = useRef(onEvent);
+    onEventRef.current = onEvent;
+
+    useEffect(() => {
+        const url = new URL(`api/channel/server-member-stream`, window.location.origin);
+        url.searchParams.set('server', serverId);
+        const eventSource = new EventSource(url, { withCredentials: true });
 
         eventSource.onmessage = (event) => {
             const rawMemberData = JSON.parse(event.data);
@@ -59,15 +49,16 @@ export function useServerMemberSSEListener(serverId: string | undefined, onEvent
                 id: rawMemberData.id,
                 server_id: rawMemberData.server_id,
                 username: rawMemberData.username
-            }
-            console.log('server member event', member)
+            };
+            onEventRef.current(member);
+        };
 
-            onEvent(member);
+        eventSource.onerror = () => {
+            console.error('Member SSE error — EventSource will reconnect');
         };
 
         return () => {
             eventSource.close();
-        }
-    }, [onEvent, serverId])
+        };
+    }, [serverId]);
 }
-
