@@ -5,7 +5,7 @@ function MainScreen() {
   const { currentServer } = useServerList()
 
   return (
-    <div className='flex flex-col h-screen'>
+    <div className='flex flex-col h-screen bg-primary'>
       <div className='bg-titlebar flex h-8 items-center justify-center text-white text-2xl p-2'>
         <p className='font-pixel'>Wizcord</p>
       </div>
