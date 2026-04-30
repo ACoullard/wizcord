@@ -90,5 +90,10 @@ zope-event==5.1
 zope-interface==7.2
     # via gevent
 
+mongomock
+    # via -r requirements.in
+fakeredis
+    # via -r requirements.in
+
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

@@ -311,82 +311,34 @@ class Model:
         return result
 
     
-    def get_server_users_public_data(self, server_id: ObjectId, stringify_ids = False):
-        get_user_ids = {
-            "$match": {"server_id": server_id},
+    def get_server_users_public_data(self, server_id: ObjectId, stringify_ids=False):
+        members = list(self.server_members.find({"server_id": server_id}))
+        if not members:
+            return []
+
+        user_ids = [m["user_id"] for m in members]
+        users_by_id = {
+            u["_id"]: u
+            for u in self.users.find({"_id": {"$in": user_ids}})
         }
 
-        lookup_user_data = {
-            "$lookup": {
-                "from": "users",
-                "let": {"user_id": "$user_id"},
-                "pipeline": [
-                    {
-                        "$match": {
-                            "$expr": {"$eq": ["$_id", "$$user_id"]}
-                        }
-                    },
-                    {
-                        "$project": {
-                            "username": 1,
-                            "_id": 0
-                        }
-                    }
-                ],
-                "as": "user_data"
+        result = []
+        for member in members:
+            user = users_by_id.get(member["user_id"])
+            if user is None:
+                continue
+            entry = {
+                "id": member["user_id"],
+                "server_id": member["server_id"],
+                "roles": member.get("roles", []),
+                "username": user["username"],
             }
-        }
+            if stringify_ids:
+                entry["id"] = str(entry["id"])
+                entry["server_id"] = str(entry["server_id"])
+            result.append(entry)
 
-        unwind_user_data = {
-            "$unwind": "$user_data"
-        }
-        # isolate_user = {
-        #     "$replaceRoot": {
-        #         "newRoot": "$user_data"
-        #     }
-        # }
-        merge_user_data = {
-            "$replaceRoot": {
-                "newRoot": {
-                    "$mergeObjects": ["$$ROOT", "$user_data"]
-                }
-            }
-        }
-        clean_up_result = {
-            "$project": {
-                "user_data": 0,
-                "_id": 0,
-            }
-        }
-
-        rename_user_id = {
-            "$set": {
-                "id": "$user_id",
-                "user_id": "$$REMOVE"
-            }
-        }
-
-        stringify = {
-            "$addFields": {
-                "server_id": {"$toString": "$server_id"},
-                "id": {"$toString": "$id"},
-            }
-        }
-
-        pipeline = [
-            get_user_ids,
-            lookup_user_data,
-            unwind_user_data,
-            merge_user_data,
-            clean_up_result,
-            rename_user_id
-        ]
-
-        if stringify_ids:
-            pipeline.append(stringify)
-
-        user_data = self.server_members.aggregate(pipeline)
-        return user_data
+        return result
         
 
     def add_user_to_server(self, user_id: ObjectId, server_id: ObjectId, roles: None | list[ObjectId] = None):
