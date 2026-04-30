@@ -7,5 +7,7 @@ redis
 cryptography
 dotenv
 pytest
+mongomock
+fakeredis
 gunicorn
 gevent
