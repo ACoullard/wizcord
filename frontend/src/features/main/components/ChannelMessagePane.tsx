@@ -67,7 +67,7 @@ function ChannelMessagePane({ channel, users }: Props) {
     return (
         <div className='bg-primary w-29/42 flex flex-col p-2'>
             <div className='flex-grow relative'>
-                <div ref={scrollContainer} className='overflow-y-auto h-full w-full absolute'>
+                <div ref={scrollContainer} className='overflow-y-auto h-full w-full absolute py-4'>
                     <MessageList messages={messagesList} users={users} />
                 </div>
             </div>
@@ -79,7 +79,8 @@ function ChannelMessagePane({ channel, users }: Props) {
                 transition duration-400 ease-in-out'>
                 <TextareaAutosize
                     ref={inputRef}
-                    className="flex-grow py-2 px-5 break-all resize-none message-text leading-tight focus:outline-none focus:shadow-outline placeholder-pixel"
+                    maxRows={8}
+                    className="flex-grow py-2 px-5 break-all resize-none overflow-y-hidden message-text leading-tight focus:outline-none focus:shadow-outline placeholder-pixel"
                     id="input"
                     placeholder="Cast your spells here!"
                     autoCorrect='off'

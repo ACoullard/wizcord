@@ -11,9 +11,9 @@ function MessageItem({content, username, isSameUser}: MessageItemProps) {
         <>
             <div className="flex flex-col justify-end p-1">
                 {!isSameUser && (<>
-                    <hr className=""></hr>
-                    <div className="h-5 center text-left">
-                        <b>{username}</b>
+                    <hr className="my-2 border-[1px] border-secondary"></hr>
+                    <div className="font-bold pb-2">
+                        {username}
                     </div>
                 </>)}
                 <div className="w-full break-all">{content}</div>
