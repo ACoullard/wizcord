@@ -10,7 +10,7 @@ async function getMessages(channelId: string): Promise<MessageData[]> {
     const response = await fetch(endpoint, { credentials: 'include' });
     if (!response.ok) throw new Error("unable to fetch message data");
     const json = await response.json();
-    return json["data"].map((message: any) => ({
+    return json["data"].map((message: { id: string; content: string; timestamp: string; author_id: string }) => ({
         id: message.id,
         content: message.content,
         timestamp: new Date(message.timestamp),

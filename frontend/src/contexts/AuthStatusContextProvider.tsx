@@ -18,7 +18,6 @@ const AuthStatusContext = createContext<AuthStatusContextType | undefined>(undef
 export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<UserData | null>(null);
 
   const setStateLoggedin = (userData: UserData) => {
@@ -53,8 +52,6 @@ export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ c
         setStateLoggedin(data as UserData);
       } catch {
         setStateLoggedout();
-      } finally {
-        setIsLoading(false);
       }
     }
     checkAuth();

@@ -6,7 +6,9 @@ type memberEventListener = (data: ServerMemberData) => void
 
 export function useMessageSSEListener(channelId: string, onEvent: messageEventListener) {
     const onEventRef = useRef(onEvent);
-    onEventRef.current = onEvent;
+    useEffect(() => {
+        onEventRef.current = onEvent;
+    });
 
     useEffect(() => {
         const url = new URL(`api/channel/message-stream`, window.location.origin);
@@ -36,7 +38,9 @@ export function useMessageSSEListener(channelId: string, onEvent: messageEventLi
 
 export function useServerMemberSSEListener(serverId: string, onEvent: memberEventListener) {
     const onEventRef = useRef(onEvent);
-    onEventRef.current = onEvent;
+    useEffect(() => {
+        onEventRef.current = onEvent;
+    });
 
     useEffect(() => {
         const url = new URL(`api/channel/server-member-stream`, window.location.origin);
