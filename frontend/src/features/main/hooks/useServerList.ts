@@ -1,37 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 
 interface ServerNameTag {
   id: string;
   name: string;
-
 }
 
-async function getServerList(): Promise<ServerNameTag[]>{
-  try {
-    const responce =  await fetch("api/servers", {credentials: 'include'})
-    if (!responce.ok) {
-      throw new Error("unable to fetch servers data")
-    }
-
-    const json = await responce.json()
-    console.log("fetched server list:", json)
-    return json
-  } catch (error) {
-    console.error(error);
-    return []
+async function getServerList(): Promise<ServerNameTag[]> {
+  const response = await fetch("api/servers", { credentials: 'include' });
+  if (!response.ok) {
+    throw new Error("unable to fetch servers data");
   }
-}
-
-async function getCurrentUser() {
-  const responce = await fetch("api/login/current-user", {
-    credentials: 'include'
-  })
-  if (!responce.ok) {
-      throw new Error("unable to fetch current user")
-    }
-  const json = await responce.json()
-  return json
+  return response.json();
 }
 
 export function useServerList() {
@@ -39,15 +18,11 @@ export function useServerList() {
   const [currentServer, setCurrentServer] = useState<ServerNameTag>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const { userData } = useAuthStatusContext();
 
   useEffect(() => {
     let mounted = true;
 
-    console.log("running server list use effect")
-
-    getCurrentUser()
-      .then(() => getServerList())
+    getServerList()
       .then((res) => {
         if (!mounted) return;
         setServerList(res);
@@ -66,7 +41,7 @@ export function useServerList() {
     return () => {
       mounted = false;
     };
-  }, [userData]);
+  }, []);
 
   return { serverList, currentServer, setCurrentServer, isLoading, error };
 }
