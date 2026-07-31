@@ -88,9 +88,6 @@ function ChannelMessagePane({ channel, users }: Props) {
                     data-lpignore='true'
                     onKeyDown={handleMessageSubmit}
                 />
-                <button className='flex w-12 aspect-square p-1'>
-                    <img className='rounded-full h-full w-full object-contain' src="/Send-Image.jpg" alt="" />
-                </button>
             </div>
         </div>
     );
