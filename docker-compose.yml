@@ -56,6 +56,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - SECRET_KEY=${SECRET_KEY}
       - FRONTEND_URL=${FRONTEND_URL}
+      - SESSION_COOKIE_SECURE=false
     ports:
       - "8000:8000"
     depends_on:

@@ -53,6 +53,7 @@ services:
       - REDIS_URL=redis://redis:6379
       - SECRET_KEY=${SECRET_KEY}
       - FRONTEND_URL=${FRONTEND_URL}
+      - SESSION_COOKIE_SECURE=true
     depends_on:
       mongodb:
         condition: service_healthy

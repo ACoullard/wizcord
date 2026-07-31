@@ -18,7 +18,8 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", os.urandom(16).hex())
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_REDIS"] = Redis.from_url(os.environ.get("REDIS_URL", 'redis://127.0.0.1:6379'))
 app.config["SESSION_PERMANENT"] = True
-# app.config["SESSION_COOKIE_SECURE"] = True # TODO: put this back to true in production
+app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE", "true").lower() != "false"
+app.config["REMEMBER_COOKIE_SECURE"] = app.config["SESSION_COOKIE_SECURE"] # remember_token lasts a year; same flag
 app.config["PERMANENT_SESSION_LIFETIME"] = 60*60*3 # three hours in seconds
 
 Session(app)
