@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { UserData } from '@main/types';
 
@@ -20,7 +20,9 @@ async function loginAnon(): Promise<{success: boolean, user: UserData | null}> {
 
 function LandingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setStateLoggedinAnonymous } = useAuthStatusContext();
+  const from = (location.state as { from?: string } | null)?.from;
 
   return (
   <div className="h-screen bg-primary flex flex-col justify-center items-center">
@@ -34,7 +36,7 @@ function LandingPage() {
           const result = await loginAnon();
           if (result.success && result.user !== null) {
             setStateLoggedinAnonymous(result.user);
-            navigate("/wizcord");
+            navigate(from ?? "/wizcord", { replace: true });
           } else {
             console.error("Login failed");
           }
@@ -46,7 +48,7 @@ function LandingPage() {
     <p className="m-5 font-pixel text-xl text-white">Or</p>
     <button
       className="px-5 py-1 bg-primary text-white rounded-full font-pixel border-2 border-secondary hover:bg-secondary transition duration-300 ease-in-out"
-      onClick={() => { navigate("/login"); }}>
+      onClick={() => { navigate("/login", { state: { from } }); }}>
       Log In
     </button>
   </div>
