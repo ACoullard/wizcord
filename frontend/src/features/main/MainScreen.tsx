@@ -12,7 +12,7 @@ function MainScreen() {
       <div className='flex-1 flex'>
         <div className='bg-secondary w-16 flex flex-row items-start z-10'>
           <button className='ml-1'>
-            <img className='w-13 h-12 rounded-full object-contain scale-100 mt-2' src="/Send-Image.jpg" alt="" />
+            <img className='w-13 h-12 rounded-full object-contain scale-100 mt-2' src="/wizard-hat.svg" alt="" />
           </button>
         </div>
 
