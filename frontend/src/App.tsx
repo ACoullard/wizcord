@@ -4,6 +4,7 @@ import MainScreen from "./features/main/MainScreen";
 import LoginPage from "./features/user-management/LoginPage";
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import LandingPage from './features/user-management/LandingPage';
+import ProtectedRoute from './features/user-management/ProtectedRoute';
 import { AuthStatusContextProvider } from './contexts/AuthStatusContextProvider';
 
 const router = createBrowserRouter([
@@ -20,7 +21,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/wizcord',
-    element: <MainScreen />,
+    element: (
+      <ProtectedRoute>
+        <MainScreen />
+      </ProtectedRoute>
+    ),
   }
 ]);
 

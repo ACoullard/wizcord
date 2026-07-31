@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStatusContext } from '@/contexts/AuthStatusContextProvider';
 import type { UserData } from '@main/types';
 
@@ -27,6 +27,8 @@ function LogOn() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = (location.state as { from?: string } | null)?.from ?? "/wizcord";
 
   const { setStateLoggedin } = useAuthStatusContext();
 
@@ -42,7 +44,7 @@ function LogOn() {
         console.log("Logged in!")
 
         setStateLoggedin(user);
-        navigate("/wizcord");
+        navigate(redirectTo, { replace: true });
     }
   }
     return (

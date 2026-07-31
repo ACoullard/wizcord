@@ -6,6 +6,7 @@ import type { UserData } from '@/features/main/types';
 interface AuthStatusContextType {
   isAuthenticated: boolean;
   isAnonymous: boolean;
+  isLoading: boolean;
   userData: UserData | null;
   setStateLoggedin: (userData: UserData) => void;
   setStateLoggedout: () => void;
@@ -19,6 +20,9 @@ export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ c
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
+  // True until the initial /api/login/current-user check resolves. Route guards
+  // must wait this out, otherwise a refresh redirects a logged-in user to /login.
+  const [isLoading, setIsLoading] = useState(true);
 
   const setStateLoggedin = (userData: UserData) => {
     setIsAuthenticated(true);
@@ -52,6 +56,8 @@ export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ c
         setStateLoggedin(data as UserData);
       } catch {
         setStateLoggedout();
+      } finally {
+        setIsLoading(false);
       }
     }
     checkAuth();
@@ -59,10 +65,11 @@ export const AuthStatusContextProvider: React.FC<{ children: ReactNode }> = ({ c
 
   return (
     <AuthStatusContext.Provider
-      value={{ 
-        isAuthenticated, 
-        isAnonymous, 
-        userData, 
+      value={{
+        isAuthenticated,
+        isAnonymous,
+        isLoading,
+        userData,
         setStateLoggedin, 
         setStateLoggedout, 
         setStateLoggedinAnonymous 
