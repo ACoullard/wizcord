@@ -1,5 +1,29 @@
 # Docker Compose Deployment Guide
 
+## Production Host Environment
+
+The production deployment runs on a self-hosted machine with the following characteristics:
+
+| Property | Value |
+|---|---|
+| Location | Home server (residential) |
+| Hardware | Circa-2007 desktop; low CPU/RAM, no hardware AES acceleration |
+| OS | Debian |
+| Network | Behind a consumer home router; no port forwarding |
+| Ingress | Cloudflare Tunnel → Nginx Proxy Manager → containers |
+| Public IP | None exposed; the tunnel is the only inbound path |
+
+Implications:
+
+- **No inbound ports are open.** All traffic arrives through the Cloudflare Tunnel, which
+  carries HTTP/HTTPS and WebSockets only. Raw TCP or UDP listeners on the host are not
+  reachable from the internet.
+- **Upstream bandwidth is residential-grade** and is the binding constraint on concurrency,
+  well before CPU or memory.
+- TLS terminates at Cloudflare; Nginx Proxy Manager and the containers see plain HTTP
+  internally, which is why `SESSION_COOKIE_SECURE=true` is set explicitly rather than
+  inferred from the request scheme.
+
 ## Deployment Options
 
 ### Option 1: Production Deployment (Using Pre-built Images)
