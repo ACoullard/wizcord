@@ -30,7 +30,11 @@ export function useServerDataCache() {
   // console.log("useServerDataCache called");
   const serverDataCache = useRef<Record<string, ServerCacheEntry>>({})
 
-  const get_data_promise = useCallback((serverId: string): Promise<ServerData> => {
+  const get_data_promise = useCallback((serverId: string, force = false): Promise<ServerData> => {
+    if (force) {
+      delete serverDataCache.current[serverId];
+    }
+
     const cached = serverDataCache.current[serverId];
     // if already have data, return it as a promise
     if (cached?.data) {

@@ -3,17 +3,24 @@ import type { MessageData, ServerMemberData } from '@main/types';
 
 type messageEventListener = (data: MessageData) => void
 type memberEventListener = (data: ServerMemberData) => void
+type openListener = () => void
 
-export function useMessageSSEListener(channelId: string, onEvent: messageEventListener) {
+export function useMessageSSEListener(channelId: string, onEvent: messageEventListener, onOpen?: openListener) {
     const onEventRef = useRef(onEvent);
+    const onOpenRef = useRef(onOpen);
     useEffect(() => {
         onEventRef.current = onEvent;
+        onOpenRef.current = onOpen;
     });
 
     useEffect(() => {
         const url = new URL(`api/channel/message-stream`, window.location.origin);
         url.searchParams.set('channel', channelId);
         const eventSource = new EventSource(url, { withCredentials: true });
+
+        eventSource.onopen = () => {
+            onOpenRef.current?.();
+        };
 
         eventSource.onmessage = (event) => {
             const rawMessageData = JSON.parse(event.data);
@@ -36,16 +43,22 @@ export function useMessageSSEListener(channelId: string, onEvent: messageEventLi
     }, [channelId]);
 }
 
-export function useServerMemberSSEListener(serverId: string, onEvent: memberEventListener) {
+export function useServerMemberSSEListener(serverId: string, onEvent: memberEventListener, onOpen?: openListener) {
     const onEventRef = useRef(onEvent);
+    const onOpenRef = useRef(onOpen);
     useEffect(() => {
         onEventRef.current = onEvent;
+        onOpenRef.current = onOpen;
     });
 
     useEffect(() => {
         const url = new URL(`api/channel/server-member-stream`, window.location.origin);
         url.searchParams.set('server', serverId);
         const eventSource = new EventSource(url, { withCredentials: true });
+
+        eventSource.onopen = () => {
+            onOpenRef.current?.();
+        };
 
         eventSource.onmessage = (event) => {
             const rawMemberData = JSON.parse(event.data);

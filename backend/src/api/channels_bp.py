@@ -3,12 +3,18 @@ from flask_login import login_required, current_user
 from bson import ObjectId
 from datetime import datetime, timezone
 import json
+import os
+import random
+import time
 
 from .shared_resources import model, User, redis_client
 
 current_user: User
 
 channel_bp = Blueprint("channel", __name__, url_prefix="/channel")
+
+SSE_HEARTBEAT_SECONDS = 30
+SSE_MAX_STREAM_SECONDS = int(os.environ.get("SSE_MAX_STREAM_SECONDS", 600))
 
 
 def _get_authorized_channel(channel_id: str):
@@ -22,6 +28,34 @@ def _get_authorized_channel(channel_id: str):
     if channel["server_id"] not in current_user.viewable_servers():
         return None, ("Not authorized to view channel", 401)
     return channel, None
+
+
+def _sse_response(redis_channel: str):
+    """Stream a Redis pub/sub channel as SSE, closing (and being reopened by the browser) after
+       a bounded lifetime.
+    """
+    def event_stream():
+        deadline = time.monotonic() + SSE_MAX_STREAM_SECONDS * random.uniform(0.8, 1.0)
+        pubsub = redis_client.pubsub()
+        pubsub.subscribe(redis_channel)
+        try:
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                message = pubsub.get_message(timeout=min(SSE_HEARTBEAT_SECONDS, remaining))
+                if message is None or message["type"] != "message":
+                    yield ": heartbeat\n\n"
+                else:
+                    yield f"data: {message['data'].decode()}\n\n"
+        finally:
+            pubsub.unsubscribe()
+            pubsub.close()
+
+    response = Response(event_stream(), mimetype="text/event-stream")
+    response.headers["X-Accel-Buffering"] = "no"
+    response.headers["Cache-Control"] = "no-cache"
+    return response
 
 
 @channel_bp.route("/<channel_id>")
@@ -51,24 +85,7 @@ def message_stream():
     if err:
         return err
 
-    def event_stream():
-        pubsub = redis_client.pubsub()
-        pubsub.subscribe(f"channel:{channel_id}")
-        try:
-            while True:
-                message = pubsub.get_message(timeout=30)
-                if message is None or message["type"] != "message":
-                    yield ": heartbeat\n\n"
-                else:
-                    yield f"data: {message['data'].decode()}\n\n"
-        finally:
-            pubsub.unsubscribe()
-            pubsub.close()
-
-    response = Response(event_stream(), mimetype="text/event-stream")
-    response.headers["X-Accel-Buffering"] = "no"
-    response.headers["Cache-Control"] = "no-cache"
-    return response
+    return _sse_response(f"channel:{channel_id}")
 
 
 @channel_bp.route("/server-member-stream")
@@ -84,24 +101,7 @@ def server_member_stream():
     if ObjectId(server_id) not in current_user.viewable_servers():
         return "Not authorized to view server", 401
 
-    def event_stream():
-        pubsub = redis_client.pubsub()
-        pubsub.subscribe(f"server_members:{server_id}")
-        try:
-            while True:
-                message = pubsub.get_message(timeout=30)
-                if message is None or message["type"] != "message":
-                    yield ": heartbeat\n\n"
-                else:
-                    yield f"data: {message['data'].decode()}\n\n"
-        finally:
-            pubsub.unsubscribe()
-            pubsub.close()
-
-    response = Response(event_stream(), mimetype="text/event-stream")
-    response.headers["X-Accel-Buffering"] = "no"
-    response.headers["Cache-Control"] = "no-cache"
-    return response
+    return _sse_response(f"server_members:{server_id}")
 
 
 @channel_bp.post("/<channel_id>/post")

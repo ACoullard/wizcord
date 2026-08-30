@@ -28,10 +28,18 @@ function ServerView({ serverId }: Props) {
             .catch(console.error)
     }, [serverId, get_server_data])
 
-    useServerMemberSSEListener(serverId, (member) => {
-        console.log('incoming member', member)
-        setUserList(prev => prev.some(u => u.id === member.id) ? prev : [...prev, member])
-    })
+    useServerMemberSSEListener(
+        serverId,
+        (member) => {
+            console.log('incoming member', member)
+            setUserList(prev => prev.some(u => u.id === member.id) ? prev : [...prev, member])
+        },
+        () => {
+            get_server_data(serverId, true)
+                .then((server_data) => setUserList(server_data.users))
+                .catch(console.error)
+        }
+    )
 
     return (
         <>

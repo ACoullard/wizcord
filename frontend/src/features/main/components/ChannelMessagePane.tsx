@@ -28,6 +28,16 @@ async function postMessage(message: string, channelId: string) {
     return response.ok;
 }
 
+const SCROLL_STICK_THRESHOLD_PX = 64;
+
+function mergeMessages(previous: MessageData[], fetched: MessageData[]): MessageData[] {
+    const byId = new Map(previous.map(message => [message.id, message]));
+    for (const message of fetched) {
+        byId.set(message.id, message);
+    }
+    return [...byId.values()];
+}
+
 type Props = {
     channel: ChannelData
     users: ServerMemberData[]
@@ -37,20 +47,37 @@ function ChannelMessagePane({ channel, users }: Props) {
     const [messagesList, setMessagesList] = useState<MessageData[]>([]);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const scrollContainer = useRef<HTMLDivElement>(null);
+    const stickToBottom = useRef(true);
 
     useEffect(() => {
+        stickToBottom.current = true;
         getMessages(channel.id).then(data => setMessagesList([...data]));
     }, [channel.id]);
 
     useLayoutEffect(() => {
-        if (scrollContainer.current) {
+        if (stickToBottom.current && scrollContainer.current) {
             scrollContainer.current.scrollTop = scrollContainer.current.scrollHeight;
         }
     }, [messagesList]);
 
-    useMessageSSEListener(channel.id, (data) => {
-        setMessagesList(prev => [...prev, data]);
-    });
+    function handleScroll() {
+        const container = scrollContainer.current;
+        if (!container) return;
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        stickToBottom.current = distanceFromBottom <= SCROLL_STICK_THRESHOLD_PX;
+    }
+
+    useMessageSSEListener(
+        channel.id,
+        (data) => {
+            setMessagesList(prev => prev.some(m => m.id === data.id) ? prev : [...prev, data]);
+        },
+        () => {
+            getMessages(channel.id)
+                .then(data => setMessagesList(prev => mergeMessages(prev, data)))
+                .catch(console.error);
+        }
+    );
 
     function handleMessageSubmit(event: React.KeyboardEvent<HTMLTextAreaElement>) {
         if (event.key === "Enter" && !event.shiftKey && inputRef.current) {
@@ -67,7 +94,7 @@ function ChannelMessagePane({ channel, users }: Props) {
     return (
         <div className='bg-primary w-29/42 flex flex-col p-2'>
             <div className='flex-grow relative'>
-                <div ref={scrollContainer} className='overflow-y-auto h-full w-full absolute py-4'>
+                <div ref={scrollContainer} onScroll={handleScroll} className='overflow-y-auto h-full w-full absolute py-4'>
                     <MessageList messages={messagesList} users={users} />
                 </div>
             </div>
