@@ -14,6 +14,8 @@ DB_PORT = int(os.environ.get("MONGODB_PORT", "27017"))
 DB_USERNAME = os.environ.get("MONGODB_USERNAME", "admin")
 DB_PASSWORD = os.environ.get("MONGODB_PASSWORD", "password")
 
+DB_MAX_POOL_SIZE = int(os.environ.get("MONGODB_MAX_POOL_SIZE", "200"))
+
 DB_NAME = os.environ.get("MONGODB_DATABASE", "wizcord")
 MESSAGES_COLL_NAME = "messages"
 SERVERS_COLL_NAME = "servers"
@@ -137,7 +139,8 @@ class Model:
             DB_PORT,
             username=DB_USERNAME,
             password=DB_PASSWORD,
-            serverSelectionTimeoutMS=2000)
+            serverSelectionTimeoutMS=2000,
+            maxPoolSize=DB_MAX_POOL_SIZE)
         if verbose:
             print("opened pyMongo connection")
         # atexit.register(self.close)

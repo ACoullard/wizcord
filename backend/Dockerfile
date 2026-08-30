@@ -29,12 +29,13 @@ USER appuser
 EXPOSE 8000
 
 # Run Gunicorn with optimized settings for production
+# Do not add --preload: it imports the app before gevent monkey-patches.
 CMD ["gunicorn", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "2", \
-     "--worker-class", "gthread", \
-     "--threads", "50", \
-     "--timeout", "0", \
+     "--worker-class", "gevent", \
+     "--worker-connections", "1000", \
+     "--timeout", "30", \
      "--access-logfile", "-", \
      "--error-logfile", "-", \
      "--log-level", "info", \

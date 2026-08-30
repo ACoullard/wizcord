@@ -29,5 +29,6 @@ encrypt = EncryptModel()
 
 redis_client = redis_lib.Redis.from_url(
     os.environ.get("REDIS_URL", "redis://127.0.0.1:6379"),
-    decode_responses=False
+    decode_responses=False,
+    max_connections=int(os.environ.get("REDIS_MAX_CONNECTIONS", "1200"))
 )
