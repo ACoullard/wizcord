@@ -123,27 +123,32 @@ capacity measurements, and a fallback if the custom server stalls.
 A read-through of the current code surfaced work that must happen first or
 alongside:
 
-- **Worker model.** The backend serves SSE from a fixed thread pool, and each
-  stream holds a thread for its lifetime. At the current connection-per-resource
-  ratio this caps concurrent users well below the target, and adding a third
-  stream per user makes it worse. Either the worker class or the number of
-  streams per user (or both) must change before capacity can be measured
-  meaningfully. This is worth doing on its own merits.
+- **Streams per user.** Each open SSE stream holds a dedicated Redis pub/sub
+  connection, so the ceiling is set by whichever runs out first: gevent
+  connections per worker, or Redis connections in the pool. A voice channel
+  adding a third stream per user divides the reachable user count accordingly.
+  Either multiplex voice events onto an existing stream or budget for the extra
+  connection deliberately.
+- **Reconnect behaviour.** SSE streams are deliberately short-lived and the
+  frontend refetches on reopen. A voice session must survive its signaling
+  stream being cut and replaced mid-call, so call state cannot be tied to the
+  identity or lifetime of an SSE connection. Any voice stream added needs the
+  same jittered expiry the existing streams use; an unjittered cap
+  resynchronises every client onto a single expiry moment.
 - **Proxy configuration.** SSE requires response buffering to be disabled. The
   repo's nginx config covers development only; in production this depends on the
-  external reverse proxy, whose configuration is not version controlled. Verify
-  before relying on it.
+  external reverse proxy and the Cloudflare Tunnel, neither of which is version
+  controlled. Verify before relying on it — including that the tunnel's idle
+  timeout is longer than the heartbeat interval.
 - **Channel types.** Channels currently have no type field, and the frontend
   resolves channel selection by name. Both need to change to distinguish voice
   channels from text channels.
-- **Test fakes.** The test suite patches shared Redis and database clients per
-  module by name; new modules must be added there or they will silently escape
-  isolation. AWS calls will need faking too.
+- **Test fakes.** AWS calls need a fake installed the way the Redis and MongoDB
+  fakes are: session-wide in `conftest.py`, before any app code imports, not per
+  module.
 - **Credentials.** The control plane host is not on AWS and has no instance role,
   so it needs scoped long-lived credentials permitting only tagged instance
   lifecycle operations.
-- **Session lifetime.** Sessions currently expire on a timer shorter than a long
-  call, which would break renegotiation mid-session.
 - **Local development.** There is currently no way to run a media server locally;
   the development compose stack needs one.
 
